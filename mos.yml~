@@ -1,0 +1,20 @@
+author: shivesh
+description: College minor project on Implementation of IoT using blockchain .
+# arch: PLATFORM
+version: 1.0
+manifest_version: 2018-06-12
+libs_version: ${mos.version}
+modules_version: ${mos.version}
+mongoose_os_version: ${mos.version}
+
+config_schema: 
+
+tags:
+  - js
+
+filesystem:
+  - fs
+
+libs:
+  - origin: https://github.com/mongoose-os-libs/js-demo-bundle
+  - origin: https://github.com/mongoose-os-libs/mjs
