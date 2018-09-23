@@ -1,171 +1,189 @@
-load('api_config.js');
-load('api_events.js');
-load('api_gpio.js');
+load('api_file.js');
 load('api_rpc.js');
-load('api_net.js');
 load('api_sys.js');
 load('api_timer.js'); 
-load('api_wifi.js'); 
+load('api_http.js'); 
+load('api_events.js');
+load('api_net.js');
+load('api_config.js');
+ 
+let read_data=function(file){
+	let clon=File.read(file);
+	if(clon===null || clon===undefined){
+		return null;
+	}
+	if(clon.length<5)
+	{
+		print('length of user_data.json is ',clon.length);
+		return null;
 
-let WIFI_SSID="Redmi2";
-let WIFI_PSWD="password"; 
-let MY_STA_IP=-1;
-
-let con=0; 
-let timr=-1;
-let ledtimr=-1; 
-let led=2;
-GPIO.set_mode(led, GPIO.MODE_OUTPUT); 
- 
-  
- 
-  RPC.addHandler('read',function(args){
-        
-        
-        let res={
-          ip:MY_STA_IP
-        };
-        
-        return res;
-        
-  });
-  
-  let mIp;
-  RPC.addHandler('reg',function(args){
-        
-        mIp=args.ip;
-        return {result:true,ip:args.ip,sta_ip:MY_STA_IP};
-        
-  });
- 
- 
- /*
-                Cfg.set({wifi: {ap: {enable: true}}});
-                Cfg.set( {wifi: {sta: {ssid: WIFI_SSID}}} );
-                Cfg.set( {wifi: {sta: {pass: WIFI_PSWD}}} );
-                Cfg.set({wifi: {sta: {enable: true}}});
- */
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-let scan=function()
-{ 
-  if(ledtimr!==-1)
-      {
-        Timer.del(ledtimr);
-        ledtimr=-1;
-      }
-
-        ledtimr=Timer.set(1000 , Timer.REPEAT, function() {
-        let value = GPIO.toggle(led);
-       }, null);
-      
-
-    if(timr!==-1)
-    {
-      Timer.del(timr);
-      timr=-1;
-    }
-  timr=Timer.set(10000, Timer.REPEAT, function() {
-    
-    print('>> Starting scan...');
-    Wifi.scan(function(results) {
-      if (results === undefined) {
-        print('!! Scan error');
-        return;
-      } else {
-        print('++ Scan finished,', results.length, 'results:');
-      }
-      for (let i = 0; i < results.length; i++) {
-        {
-          print(' ', JSON.stringify(results[i]));
-          let string=JSON.stringify(results[i]);
-          if(string.indexOf(SSID) !== -1)
-          {    
-                if(timr!==-1)
-                {
-                  Timer.del(timr);
-                  timr=-1;
-                }
-                       timr=-1;       
-                Cfg.set( {wifi: {sta: {ssid: WIFI_SSID}}} );
-                Cfg.set( {wifi: {sta: {pass: WIFI_PSWD}}} );
-                Cfg.set({wifi: {sta: {enable: true}}});
-             // Sys.reboot(5);
-
-
-          }
-        }
-        
-      }
-      
-  });
-}, null);
-
+	}
+	return JSON.parse(clon);
+};
+let poll=read_data("poll.json");
+let API_KEY="aezakmi";
+let OTA_POLL_URL=poll.url+"/ota_poll?api_key=aezakmi&version="+ (Cfg.get("device.firmware_version"));
+let size; let fname;
+let auto_apply = false;
+let write_data=function(file,data){ 
+	File.write(JSON.stringify(data),file);
 };
 
-//scan(); 
+let upd_rollback=function(s){
+	print('ugh rolling back');
+	File.remove('worker.js');
+	File.rename('worker.js.bak', 'worker.js');
+	s.status="COMMITED_OK";
+	write_data('updater_data.json',s);
+	Sys.reboot(5);
+};
 
+let unCommitedUpdates=false;
+let upd_commit=function()
+{
+	let s={
+		files:[],
+		status:"COMMIED_OK"
+	};
+	write_data("updater_data.json",s);
+};
 
- Wifi.scan(function(results) {
-      if (results === undefined) {
-        print('!! Scan error');
-        return;
-      } else {
-        print('++ Scan finished,', results.length, 'results:');
-      }
-      for (let i = 0; i < results.length; i++) {
-        {
-          print(' ', JSON.stringify(results[i]));
-          
-        }
-      }
- });
- 
- 
+let upd_check=function(){
+	print('Checking for Uncommited Updates ');
+	let s = read_data('updater_data.json');
+	if(s===null){
+		s={
+			firmware_version:Cfg.get("device.firmware_version"),
+			status:"COMMITED_OK"
+		};
+		print('Didnt Find updater_data.json settin to default v',s.firmware_version);
+		write_data('updater_data.json',s);
+	}
+	if(s.status==="COMMITED_OK"){
+		print('COMMITED_OK now loading worker of v',s.firmware_version);
+		s={
+			firmware_version:s.firmware_version,
+			status:"COMMITED_OK"
+		};
+		write_data('updater_data.json',s);
+	}else if(s.status==="TO_COMMIT"){
+		unCommitedUpdates=true;
+		print('Seems like changes to be commited');
+		File.rename('worker.js', 'worker.js.bak');
+		File.rename('worker.js.new', 'worker.js');
+		Timer.set(10000  , 0, function() {
+			s = read_data('updater_data.json');
+			if(s.status==="COMMIED_OK"){
+				Cfg.set( {device: {firmware_version: s.firmware_version}} ); 
+				print('Seems all went ok when upgrading to v',s.firmware_version);
+			}else{
+				upd_rollback(s);
+			}
+		}, null);
+	}else{
+		print('not sure about status now loading worker');
+	}
+	return s;
+}; 
+
+let callback=null;
+let download=function(url,name,_callback){
+    callback=_callback;
+    let args={"url": url, "file": name};
+    File.remove(name);
+    RPC.call(RPC.LOCAL,'Fetch',args,function(res){
+    	print('Download Res',JSON.stringify(res));
+    	callback(res);
+    	return true;
+    });
+};
+
+let new_version;
+let ota_poll=function(){
+	let upd_reset_count=Cfg.get("upd_reset_count");
+	print("Device Version is : ",Cfg.get("device.firmware_version")," and upd_reset_count is ",upd_reset_count);
+	if(upd_reset_count<0){
+		Cfg.set({upd_reset_count:(++upd_reset_count)});
+		return;
+	}else{
+		Cfg.set({upd_reset_count:(0)});
+	}
+	print('Checking for Updates ',OTA_POLL_URL);
+	HTTP.query({
+		url: OTA_POLL_URL,
+		success: function(body, full_http_msg) {
+			print(body); 
+			let args2=JSON.parse(body);
+			let fname="worker.js.new";
+			File.remove(fname);
+			print('Update URL ',args2.url);
+			new_version=args2.version;
+			let args={"url": args2.url, "file": fname};
+			RPC.call(RPC.LOCAL,'Fetch',args,function(res){
+				print('Download Res',JSON.stringify(res));
+				if(res!==null){
+					let s={
+						status:"TO_COMMIT",
+						firmware_version:new_version
+					};   
+					write_data("updater_data.json",s);
+					print('File Updated...Will be Applied on Reboot --> v',new_version);
+				}else{
+					print('Failed');
+				}
+				return true;
+			});
+		},
+		error: function( s ) { print(s); },  // Optional
+	}); 
+};
+
 Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
-  let evs = '???';
-  if (ev === Net.STATUS_DISCONNECTED) {
-    
-    //scan();
-    MY_STA_IP=-1;
-    evs = 'DISCONNECTED';
-  } else if (ev === Net.STATUS_CONNECTING) {
-    
-    if(timr!==-1)
-    {
-      Timer.del(timr);
-      timr=-1;
-    }
-    
-    evs = 'CONNECTING';
-  } else if (ev === Net.STATUS_CONNECTED) {
-    if(ledtimr!==-1)
-      {
-        Timer.del(ledtimr);
-          ledtimr=-1;
-      }
+	if (ev === Net.STATUS_DISCONNECTED) {
 
-  GPIO.write(led,0);
-    evs = 'CONNECTED';
-  } else if (ev === Net.STATUS_GOT_IP) {
-    evs = 'GOT_IP';
+	} else if (ev === Net.STATUS_CONNECTING) {
     
-    RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) {
-    print('info:', JSON.stringify(resp)); 
-    MY_STA_IP=resp.wifi.sta_ip;
-  }, null);
-  
-  
-  }
-  print('== Net event:', ev, evs);
+	} else if (ev === Net.STATUS_CONNECTED) {
+   
+	} else if (ev === Net.STATUS_GOT_IP) {
+		if(!unCommitedUpdates)
+			ota_poll();     
+	}
 }, null);
+
+let s=upd_check();
+load('worker.js');
+
+RPC.addHandler('update',function(args){
+	fname="worker.js.new";
+	print('Updating from url... ',args.url);
+	download(args.url,fname,function(res){
+		if(res!==null){
+			let s={
+				files:[{
+					file_o:fname,
+					file_n:fname+".new"
+				}],
+				status:"TO_COMMIT"
+			};   
+			write_data("updater_data.json",s);
+			print('File Updated...Will be Applied on Reboot');
+			if(auto_apply)
+				Sys.reboot(5);
+		}else{
+			print('Failed');
+		}
+    });
+	return {"result":"Update started !"};
+});
+
+RPC.addHandler('downloadFile',function(args){
+	let url=args.url;
+	let name=args.name; 
+	download(url,name,function(args){
+		print('dwd done...Will be Applied on Reboot');
+		if(auto_apply)
+		Sys.reboot(5);
+	});
+	return {"result":"File Download Start!"};
+});

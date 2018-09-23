@@ -7,7 +7,17 @@ libs_version: ${mos.version}
 modules_version: ${mos.version}
 mongoose_os_version: ${mos.version}
 
-config_schema: 
+sources:
+  - src
+config_schema:
+  - ["mqtt.server", "iot.eclipse.org:1883"]
+  - ["i2c.enable", true]
+  - ["device.id", "s", "Mansaa_??????",{title: "Device ID"}]
+  - ["device.firmware_version", "s", "10",{title: "Device SW Version"}]
+  - ["device.firmware_version_previous", "s", "10",{title: "Device SW Version Last Working"}]
+  - ["device.hardware_version", "s", "10",{title: "Device HW Version"}]
+  - ["upd_reset_count", "i", 0,{title: "Device HW Version"}]
+ 
 
 tags:
   - js
@@ -16,5 +26,4 @@ filesystem:
   - fs
 
 libs:
-  - origin: https://github.com/mongoose-os-libs/js-demo-bundle
-  - origin: https://github.com/mongoose-os-libs/mjs
+  - origin: https://github.com/mongoose-os-libs/js-demo-bundle 
