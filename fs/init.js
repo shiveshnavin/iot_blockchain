@@ -24,7 +24,7 @@ let poll=read_data("poll.json");
 let API_KEY="aezakmi";
 let OTA_POLL_URL=poll.url+"/ota_poll?api_key=aezakmi&version="+ (Cfg.get("device.firmware_version"));
 let size; let fname;
-let auto_apply = false;
+let auto_apply = true;
 let write_data=function(file,data){ 
 	File.write(JSON.stringify(data),file);
 };

@@ -1,0 +1,32 @@
+{
+  "name": "nodejs_starter",
+  "version": "1.0.0",
+  "description": "Empty NodeJS app with Handlerbars and Http",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shiveshnavin/nodejs_starter.git"
+  },
+  "keywords": [
+    "node",
+    "starter"
+  ],
+  "author": "Shivesh Navin",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/shiveshnavin/nodejs_starter/issues"
+  },
+  "homepage": "https://github.com/shiveshnavin/nodejs_starter#readme",
+  "dependencies": {
+    "array": "^0.4.3",
+    "express": "^4.16.3",
+    "express-handlebars": "^3.0.0",
+    "file": "^0.2.2",
+    "formidable": "^1.2.1",
+    "path": "^0.12.7",
+    "public-ip": "^2.4.0"
+  }
+}
