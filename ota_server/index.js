@@ -94,9 +94,9 @@ app.get('/hitme',function(req,res){
 
 app.get('/register',function(req,res){
 
-
-    console.log("Device Keep Alive Call");
-    res.send({result:true});
+    var currentdate = new Date();
+    console.log(""+currentdate.getTime()+" - Device Keep Alive Call");
+    res.send({call:"Result of PC "});
 
 
 })

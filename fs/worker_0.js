@@ -28,7 +28,7 @@ Cfg.set({wifi:{ap:{
 
 
 
-Cfg.set({wifi:{sta:{ssid:"iot_1",pass:"password",enable:true}}});
+Cfg.set({wifi:{sta:{ssid:"wifi",pass:"",enable:true}}});
 
 RPC.addHandler('call',function(args){
 
@@ -43,6 +43,14 @@ Timer.set(3000,1,function(){
   print("calling to Iot 1 : http://192.168.4.50/rpc/call");
   HTTP.query({
     url: 'http://192.168.4.50/rpc/call',
+    success: function(body, full_http_msg) { print(body); },
+    error: function(err) { print(err); }   
+  });
+
+
+  print("calling to PC 1 : http://192.168.43.32:8080/register");
+  HTTP.query({
+    url: 'http://192.168.43.32:8080/register',
     success: function(body, full_http_msg) { print(body); },
     error: function(err) { print(err); }   
   });
