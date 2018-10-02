@@ -27,34 +27,34 @@ PASS
 
 (Syntax = Stattion Name :> Access Point Name)
 ```code
-iot1 -----:> iot0 ----:> wifi <:------ PC 
+iot_1 -----:> iot_0 ----:> wifi <:------ PC 
 ```
 #### Test Case 0 : 
 
-iot1 makes an http call to iot0  at a fixed IP and check if http call works  (PASS) 
+iot_1 makes an http call to iot_0  at a fixed IP and check if http call works  (PASS) 
 
 
 #### Test Case 1 : 
 
-iot0 makes an http call to iot1 (i.e. device in its AP network) at its guessed IP address (later IP table registration will be used ) and see if it gets resutls , this will be used in callbacking (PASS)
+iot_0 makes an http call to iot_1 (i.e. device in its AP network) at its guessed IP address (later IP table registration will be used ) and see if it gets resutls , this will be used in callbacking (PASS)
 
 
 #### Test Case 2 : 
 
-iot0 makes an http call to PC (i.e. device in its STA Network) (PASS) 
+iot_0 makes an http call to PC (i.e. device in its STA Network) (PASS) 
 
 In Image
 
 ````code
 
 Top Terminal Shows Log on PC Endpoint
-Left Terminal Shows Log on iot0
-Right Terminal Shows Log on iot1
+Left Terminal Shows Log on iot_0
+Right Terminal Shows Log on iot_1
 
 ````
 
 
-Idea is that when a device connected iot0's AP makes a request to access PC (which is connected to same AP as iot0) then iot0 will recieve this request and make another request to PC , the result from the PC is required to be forwarded back to iot1 which made the initial request thus facilitating callbacks
+Idea is that when a device connected iot_0's AP makes a request to access PC (which is connected to same AP as iot_0) then iot_0 will recieve this request and make another request to PC , the result from the PC is required to be forwarded back to iot_1 which made the initial request thus facilitating callbacks
 
 ## Build It Yourself
  TODO
