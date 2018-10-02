@@ -21,7 +21,7 @@ Test Case 0 : After setting in config and device connects to AP , AP is restarte
 *PASS*
 
 ### Test 2 : To check if a device is cabale of requesting to servers on diffrent networks
-![Alt text](screenshots/test_0_dhcp_distribution.jpg "Internetwork Communivation") 
+![Alt text](screenshots/test_0_dhcp_distribution.png "Internetwork Communivation") 
 
 (Syntax = Stattion_Name :> Access_Point_Name)
 ```code
