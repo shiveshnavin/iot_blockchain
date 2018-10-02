@@ -1,11 +1,12 @@
 # iot_blockchain
 College Minor project on Implementation of IoT using Blockchain
 
-## Module 1: Building Resources ( IoT Potato Controlled Drum Player : Capacitive Touch Sensor) 
-### --> Demo Video : CLICK IMAGE TO OPEN <--
+## Module 1: Building Resources 
+### Capacitive Touch : IoT Potato Controlled Drum Player  ( 24/8/18 )
+#### --> Demo Video : CLICK IMAGE TO OPEN <--
 [![IoT Drum Player : Potato Version](https://img.youtube.com/vi/ghmBqej5D24/0.jpg)](https://www.youtube.com/watch?v=ghmBqej5D24 "Video : IoT Drum Player : Potato Version")
 
-## Module 2: Internetwork Communication (CORE)
+## Module 2: Internetwork Communication (CORE)  ( 02/9/18 )
 To make HTTP calls from once deive routed through AP and Routed through STA mode when device is working in AP+STA mode . This will be used for Chaining Up multiple devices and request forwarding and Callbacking [See Test 2]
 
 
@@ -16,13 +17,13 @@ To make HTTP calls from once deive routed through AP and Routed through STA mode
 
 ## Tests
 
-### Test 1 : To check if a device is cabale of autoconnecting in sta mode when the AP is available
+### Test 1 : To check if a device is cabale of autoconnecting in sta mode when the AP is available   ( 01/9/18 )
 #### Test Case 0 : 
 
 After setting in config and device connects to AP , AP is restarted and device in monirotred if it rescans the AP and connects to it 
 PASS
 
-### Test 2 : To check if a device is cabale of requesting to servers on diffrent networks
+### Test 2 : To check if a device is cabale of requesting to servers on diffrent networks   ( 02/9/18 )
 ![Alt text](screenshots/test_0_dhcp_distribution.png "Internetwork Communivation") 
 
 (Syntax = Stattion Name :> Access Point Name)
