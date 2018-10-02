@@ -44,6 +44,35 @@ iot_0 makes an http call to iot_1 (i.e. device in its AP network) at its guessed
 
 iot_0 makes an http call to PC (i.e. device in its STA Network) (PASS) 
 
+#### Test Case 3 : 
+
+```code
+iot_1 <:-----:> iot_0  
+```
+Both devices are tightly coupled to each other i.e. connected to eachohers AP , but the ip addressing is in diffrerent ranges 
+
+for iot_0 
+```javascript
+
+Cfg.set({wifi:{ap:{
+  ssid:"iot_0",pass:"password",enable:true,ip:"192.168.4.1"
+  ,gw:"192.168.4.1",dhcp_start:"192.168.4.2",dhcp_end:"192.168.4.49"}}});
+
+````
+
+for iot_1 
+```javascript
+
+    Cfg.set({wifi:{ap:{
+ssid:"iot_1",pass:"password",enable:true,ip:"192.168.4.50"
+,gw:"192.168.4.50",dhcp_start:"192.168.4.51",dhcp_end:"192.168.4.100"}}});
+
+````
+
+iot_0 makes an http call to iot_1 , iot_1 makes an http call to iot_0  (PASS) 
+
+
+
 In Image
 
 ````code
