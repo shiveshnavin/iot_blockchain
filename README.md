@@ -20,7 +20,7 @@ To make HTTP calls from once deive routed through AP and Routed through STA mode
 #### Test Case 0 : 
 
 After setting in config and device connects to AP , AP is restarted and device in monirotred if it rescans the AP and connects to it 
-<b>PASS*
+PASS
 
 ### Test 2 : To check if a device is cabale of requesting to servers on diffrent networks
 ![Alt text](screenshots/test_0_dhcp_distribution.png "Internetwork Communivation") 
