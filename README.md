@@ -21,6 +21,9 @@ To make HTTP calls from once device routed through AP and that Routed through ST
 ## Tests
 
 ### Test 1 : To check if a device is cabale of autoconnecting in sta mode when the AP is available   ( 01/9/18 )
+
+Helpful Conceptual Video [ESP8266 NAT](https://www.youtube.com/watch?v=OM2FqnMFCLw)
+
 #### Test Case 0 : 
 
 After setting in config and device connects to AP , AP is restarted and device in monirotred if it rescans the AP and connects to it 
