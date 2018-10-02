@@ -1,12 +1,15 @@
 # iot_blockchain
 College Minor project on Implementation of IoT using Blockchain
 
-## Module 1: Building Resources 
+## Module 1: Resources 
+
 ### Capacitive Touch : IoT Potato Controlled Drum Player  ( 24/8/18 )
 #### --> Demo Video : CLICK IMAGE TO OPEN <--
 [![IoT Drum Player : Potato Version](https://img.youtube.com/vi/ghmBqej5D24/0.jpg)](https://www.youtube.com/watch?v=ghmBqej5D24 "Video : IoT Drum Player : Potato Version")
 
-## Module 2: Internetwork Communication (CORE)  ( 02/9/18 )
+## Module 2: Resource Discovery 
+
+###Internetwork Communication (CORE)  ( 02/9/18 )
 To make HTTP calls from once deive routed through AP and Routed through STA mode when device is working in AP+STA mode . This will be used for Chaining Up multiple devices and request forwarding and Callbacking [See Test 2]
 
 
@@ -71,7 +74,7 @@ ssid:"iot_1",pass:"password",enable:true,ip:"192.168.4.50"
 
 iot_0 makes an http call to iot_1 , iot_1 makes an http call to iot_0  (PASS) 
 
-
+### Conclusions
 
 In Image
 
