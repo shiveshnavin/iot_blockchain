@@ -22,7 +22,7 @@ To make HTTP calls from once device routed through AP and that Routed through ST
 
 ### Test 1 : To check if a device is cabale of autoconnecting in sta mode when the AP is available   ( 01/9/18 )
 
-Helpful Conceptual Video [ESP8266 NAT](https://www.youtube.com/watch?v=OM2FqnMFCLw)
+Helpful Conceptual Video , this is not how things work here though [ESP8266 NAT](https://www.youtube.com/watch?v=OM2FqnMFCLw)
 
 #### Test Case 0 : 
 
