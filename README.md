@@ -16,8 +16,9 @@ To make HTTP calls from once deive routed through AP and Routed through STA mode
 
 ## Tests
 
-### Test 2 : To check if a device is cabale of autoconnecting in sta mode when the AP is available
+### Test 1 : To check if a device is cabale of autoconnecting in sta mode when the AP is available
 #### Test Case 0 : 
+
 After setting in config and device connects to AP , AP is restarted and device in monirotred if it rescans the AP and connects to it 
 <b>PASS*
 
@@ -29,17 +30,21 @@ After setting in config and device connects to AP , AP is restarted and device i
 iot_1 -----:> iot_0 ----:> wifi <:------ PC 
 ```
 #### Test Case 0 : 
+
 iot_1 makes an http call to iot_0  at a fixed IP and check if http call works  (PASS) 
 
 
 #### Test Case 1 : 
+
 iot_0 makes an http call to iot_1 (i.e. device in its AP network) at its guessed IP address (later IP table registration will be used ) and see if it gets resutls , this will be used in callbacking (PASS)
 
 
 #### Test Case 2 : 
+
 iot_0 makes an http call to PC (i.e. device in its STA Network) (PASS) 
 
 In Image
+
 ````code
 Top Terminal Shows Log on PC Endpoint
 Left Terminal Shows Log on iot_0
