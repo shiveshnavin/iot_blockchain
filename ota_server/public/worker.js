@@ -1,12 +1,10 @@
 load('api_sys.js'); 
- 
-
 let cur_wifi=Cfg.get("wifi.sta.ssid");
-if(cur_wifi!=="JioFi2_00C3E7")
+if(cur_wifi!=="")
 {
 
-  Cfg.set( {wifi: {sta: {ssid: "JioFi2_00C3E7"}}} );
-  Cfg.set( {wifi: {sta: {pass: "ytf47mnfjn"}}} );
+  Cfg.set( {wifi: {sta: {ssid: ""}}} );
+  Cfg.set( {wifi: {sta: {pass: ""}}} );
   Cfg.set({wifi: {sta: {enable: true}}});
   print("New WIFI CONFIGURED");
 
@@ -14,6 +12,60 @@ if(cur_wifi!=="JioFi2_00C3E7")
 else{
   print("Wifi Already Configured");
 }
+
+Timer.set(5000,1,function()
+{
+  print("Calling Keep Alive");
+  HTTP.query({
+    url: "http://192.168.4.2:8080/register",
+    success: function(body, full_http_msg) {
+      print(body); 
+      
+    },
+    error: function( s ) { print(s); },  // Optional
+  }); 
+  
+},null);
+
+
+Wifi.scan(function(results) {
+  if (results === undefined) {
+    print('!! Scan error');
+    return;
+  } else {
+    print('++ Scan finished,', results.length, 'results:');
+  }
+  for (let i = 0; i < results.length; i++) {
+    {
+      print(' ', JSON.stringify(results[i]));
+    } 
+  }
+  
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 let upd_commit=function()
 {

@@ -92,6 +92,14 @@ app.get('/hitme',function(req,res){
 
 })
 
+app.get('/register',function(req,res){
+
+
+    console.log("Device Keep Alive Call");
+    res.send({result:true});
+
+
+})
 
 
 app.get('/ota_poll',function(req,res){
