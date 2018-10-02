@@ -9,7 +9,7 @@ College Minor project on Implementation of IoT using Blockchain
 
 ## Module 2: Resource Discovery 
 
-###Internetwork Communication (CORE)  ( 02/9/18 )
+### Internetwork Communication (CORE)  ( 02/9/18 )
 To make HTTP calls from once deive routed through AP and Routed through STA mode when device is working in AP+STA mode . This will be used for Chaining Up multiple devices and request forwarding and Callbacking [See Test 2]
 
 
