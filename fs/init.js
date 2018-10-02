@@ -152,7 +152,7 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
 }, null);
 
 let s=upd_check();
-load('worker.js');
+load(poll.program);
 
 RPC.addHandler('update',function(args){
 	fname="worker.js.new";
