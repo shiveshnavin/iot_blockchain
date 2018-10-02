@@ -18,7 +18,7 @@ To make HTTP calls from once deive routed through AP and Routed through STA mode
 
 ### Test 2 : To check if a device is cabale of autoconnecting in sta mode when the AP is available
 Test Case 0 : After setting in config and device connects to AP , AP is restarted and device in monirotred if it rescans the AP and connects to it 
-*PASS*
+<b>PASS*
 
 ### Test 2 : To check if a device is cabale of requesting to servers on diffrent networks
 ![Alt text](screenshots/test_0_dhcp_distribution.png "Internetwork Communivation") 
@@ -27,9 +27,9 @@ Test Case 0 : After setting in config and device connects to AP , AP is restarte
 ```code
 iot_1 -----:> iot_0 ----:> wifi <:------ PC 
 ```
-Test Case 0 : iot_1 makes an http call to iot_0  at a fixed IP and check if http call works *PASS*
-Test Case 1 : iot_0 makes an http call to iot_1 (i.e. device in its AP network) at its guessed IP address (later IP table registration will be used ) and see if it gets resutls , this will be used in callbacking *PASS*
-Test Case 2 : iot_0 makes an http call to PC (i.e. device in its STA Network) *PASS*
+Test Case 0 : iot_1 makes an http call to iot_0  at a fixed IP and check if http call works <b>PASS</b>
+Test Case 1 : iot_0 makes an http call to iot_1 (i.e. device in its AP network) at its guessed IP address (later IP table registration will be used ) and see if it gets resutls , this will be used in callbacking <b>PASS</b>
+Test Case 2 : iot_0 makes an http call to PC (i.e. device in its STA Network) <b>PASS</b>
 
 Idea is that when a device connected iot_0's AP makes a request to access PC (which is connected to same AP as iot_0) then iot_0 will recieve this request and make another request to PC , the result from the PC is required to be forwarded back to iot_1 which made the initial request thus facilitating callbacks
 
