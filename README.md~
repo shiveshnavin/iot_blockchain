@@ -46,9 +46,11 @@ iot_0 makes an http call to PC (i.e. device in its STA Network) (PASS)
 In Image
 
 ````code
+
 Top Terminal Shows Log on PC Endpoint
 Left Terminal Shows Log on iot_0
 Right Terminal Shows Log on iot_1
+
 ```
 
 
