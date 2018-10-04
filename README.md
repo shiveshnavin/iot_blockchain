@@ -3,13 +3,13 @@ College Minor project on Implementation of IoT using Blockchain
 
 ## Module 1: Resources 
 
-### Capacitive Touch : IoT Potato Controlled Drum Player  ( 24/8/18 )
+### Capacitive Touch : IoT Potato Controlled Drum Player  ( 24/9/18 )
 #### Demo Video : CLICK IMAGE TO OPEN 
 [![IoT Drum Player : Potato Version](https://img.youtube.com/vi/ghmBqej5D24/0.jpg)](https://www.youtube.com/watch?v=ghmBqej5D24 "Video : IoT Drum Player : Potato Version")
 
 ## Module 2: Resource Discovery 
 
-### Internetwork Communication (CORE)  ( 02/9/18 )
+### Internetwork Communication (CORE)  ( 02/10/18 )
 To make HTTP calls from once device routed through AP and that Routed through STA mode when device is working in AP+STA mode . This will be used for Chaining Up multiple devices , request forwarding and Callbacking [See Test 2]
 
 
@@ -20,7 +20,7 @@ To make HTTP calls from once device routed through AP and that Routed through ST
 
 ## Tests
 
-### Test 1 : To check if a device is cabale of autoconnecting in sta mode when the AP is available   ( 01/9/18 )
+### Test 1 : To check if a device is cabale of autoconnecting in sta mode when the AP is available   ( 01/10/18 )
 
 Helpful Conceptual Video , this is not how things work here though [ESP8266 NAT](https://www.youtube.com/watch?v=OM2FqnMFCLw)
 
@@ -29,7 +29,7 @@ Helpful Conceptual Video , this is not how things work here though [ESP8266 NAT]
 After setting in config and device connects to AP , AP is restarted and device in monirotred if it rescans the AP and connects to it 
 PASS
 
-### Test 2 : To check if a device is cabale of requesting to servers on diffrent networks   ( 02/9/18 )
+### Test 2 : To check if a device is cabale of requesting to servers on diffrent networks   ( 02/10/18 )
 ![Alt text](screenshots/test_0_dhcp_distribution.png "Internetwork Communivation") 
 
 (Syntax = Stattion Name :> Access Point Name)
