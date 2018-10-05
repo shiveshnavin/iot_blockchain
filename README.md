@@ -53,7 +53,7 @@ PASS
 ### Test 2 : To check if a device is cabale of requesting to servers on diffrent networks   ( 02/10/18 )
 ![Alt text](screenshots/test_0_dhcp_distribution.png "Internetwork Communivation") 
 
-(Syntax = Stattion Name :> Access Point Name)
+(Syntax = Stattion Name ----:> Access Point Name)
 ```code
 iot_1 -----:> iot_0 ----:> wifi <:------ PC 
 ```
@@ -115,7 +115,7 @@ Idea is that when a device connected iot_0's AP makes a request to access PC (wh
 
 ## TODO
 
-### Implement functionality to auto create a network structure , Module 3
+### 1. Implement functionality to auto create a network structure , Module 3
 
 All devices connect to backbone network when in centralized mode
 
@@ -130,11 +130,11 @@ When backbone network goes down or when in chained mode , trigger a scan and con
 Wifi.scan(..)
 
 ```
-### Formulate Intercom and resource discovery/access architecture
+### 2. Formulate Intercom and resource discovery/access architecture
 
 Create flow chart of how requests can be handled/forwarded aand what to do on callbacks
 
-### Write Intercom functions
+### 3. Write Intercom functions
 
 Write implementations for 
 ```code
@@ -143,6 +143,25 @@ on_callback()
 on_resource()
 
 ```
+
+### 4. Formulate and Implement Algorithm for preventing DHCP assigned IP clashes ( 05/10/18 )
+Background : All device's default IP in AP mode is 192.168.4.1 . When a client connects to AP an IP in range 192.168.4.2 to 192.168.4.100
+Problem : When 2 devices connected to each other in 
+
+```code
+iot_1 -----:> iot_0  
+```
+both are having same dhcp range as well as IP , Need to reconfigure dynamically AP or at least manually write an RPC to restart AP with a dhcp range and IP
+such that it dosent clash with any other device in the network .
+
+```javascript
+
+    Cfg.set({wifi:{ap:{
+ssid:"iot_1",pass:"password",enable:true,ip:"192.168.4.50"
+,gw:"192.168.4.50",dhcp_start:"192.168.4.51",dhcp_end:"192.168.4.100"}}});
+
+```
+Above code has to be dynamic through an RPC 
 
 ## Build It Yourself (05/10/18)
 
