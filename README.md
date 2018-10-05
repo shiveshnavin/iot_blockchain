@@ -145,7 +145,7 @@ on_resource()
 ```
 
 ### 4. Formulate and Implement Algorithm for preventing DHCP assigned IP clashes ( 05/10/18 )
-Background : All device's default IP in AP mode is 192.168.4.1 . When a client connects to AP an IP in range 192.168.4.2 to 192.168.4.100
+Background : All device's default IP in AP mode is 192.168.4.1 . When a client connects to AP an IP in range 192.168.4.2 to 192.168.4.100 is assigned to the client
 Problem : When 2 devices connected to each other in 
 
 ```code

@@ -161,7 +161,7 @@ ssid:"iot_1",pass:"password",enable:true,ip:"192.168.4.50"
 ,gw:"192.168.4.50",dhcp_start:"192.168.4.51",dhcp_end:"192.168.4.100"}}});
 
 ```
-This has to be dynamic through an RPC 
+Above code has to be dynamic through an RPC 
 
 ## Build It Yourself (05/10/18)
 
