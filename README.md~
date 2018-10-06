@@ -1,7 +1,15 @@
-# iot_blockchain
+# IoTain
 College Minor project on Implementation of IoT using Blockchain
 
-![Alt text](screenshots/mesh.git "Iot Chain") 
+![Alt text](screenshots/mesh.gif "Iot Chain") 
+
+IoTain is developed as a lite operating system using the blockchain concept and implementing PBFT, SPV and CPS technology, allowing data to be layered and stored in a decentralised manner and providing protection with the combined strength of the millions of IoT nodes within the network.
+
+The technology will result in an economy of sharing for Internet of Things (IoT) devices in a decentralized and energy efficient environment while producing a wealth of valuable user data which can be used as fuel for the development of AI with users rewarded for providing this fuel.
+
+Under this network, the interconnection of IoT devices of a home, a business or even a city can truly flourish without worry of transfer congestion, malicious attacks or losing privacy.
+
+
 ## Module 1: Resources 
 
 ### Capacitive Touch : IoT Potato Controlled Drum Player  ( 24/9/18 )
@@ -9,6 +17,8 @@ College Minor project on Implementation of IoT using Blockchain
 [![IoT Drum Player : Potato Version](https://img.youtube.com/vi/ghmBqej5D24/0.jpg)](https://www.youtube.com/watch?v=ghmBqej5D24 "Video : IoT Drum Player : Potato Version")
 
 ## Module 2: Resource Discovery 
+
+![Alt text](screenshots/resource_discovery.png "Iot Chain") 
 
 ### Internetwork Communication (CORE)  ( 02/10/18 )
 To make HTTP calls from once device routed through AP and that Routed through STA mode when device is working in AP+STA mode . This will be used for Chaining Up multiple devices , request forwarding and Callbacking [See Test 2]
