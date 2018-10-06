@@ -1,6 +1,7 @@
 # iot_blockchain
 College Minor project on Implementation of IoT using Blockchain
 
+![Alt text](screenshots/mesh.git "Iot Chain") 
 ## Module 1: Resources 
 
 ### Capacitive Touch : IoT Potato Controlled Drum Player  ( 24/9/18 )
