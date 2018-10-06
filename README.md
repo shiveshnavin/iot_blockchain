@@ -7,6 +7,8 @@ IoTain is developed as a lite operating system using the blockchain concept and 
 
 The technology will result in an economy of sharing for Internet of Things (IoT) devices in a decentralized and energy efficient environment while producing a wealth of valuable user data which can be used as fuel for the development of AI with users rewarded for providing this fuel.
 
+![Alt text](screenshots/iot_market.png "Iot Market") 
+
 Under this network, the interconnection of IoT devices of a home, a business or even a city can truly flourish without worry of transfer congestion, malicious attacks or losing privacy.
 
 
@@ -53,8 +55,6 @@ When backbone network goes down or when in chained mode , trigger a scan and con
 ## Tests
 
 ### Test 1 : To check if a device is cabale of autoconnecting in sta mode when the AP is available   ( 01/10/18 )
-
-Helpful Conceptual Video , this is not how things work here though [ESP8266 NAT](https://www.youtube.com/watch?v=OM2FqnMFCLw)
 
 #### Test Case 0 : 
 
@@ -228,6 +228,13 @@ curl -X POST \
 	"url":"http://192.168.4.2:8080/worker.js"
       }'
 ``` 
+
+## Refrences
+
+Helpful Conceptual Video , this is not how things work here though [ESP8266 NAT](https://www.youtube.com/watch?v=OM2FqnMFCLw)
+https://www.devteam.space/blog/iot-blockchain-technology-uses-cases-overview/
+
+## Team
 
 
 
