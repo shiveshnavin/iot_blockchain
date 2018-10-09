@@ -6,7 +6,7 @@ load('api_http.js');
 load('api_events.js');
 load('api_net.js');
 load('api_config.js');
- 
+
 let read_data=function(file){
 	let clon=File.read(file);
 	if(clon===null || clon===undefined){
@@ -21,6 +21,11 @@ let read_data=function(file){
 	return JSON.parse(clon);
 };
 let poll=read_data("poll.json");
+let WORKER_FILE="worker.js";
+if(poll.program!==undefined)
+{
+	WORKER_FILE=poll.program;
+}
 let API_KEY="aezakmi";
 let OTA_POLL_URL=poll.url+"/ota_poll?api_key=aezakmi&version="+ (Cfg.get("device.firmware_version"));
 let size; let fname;
@@ -31,8 +36,8 @@ let write_data=function(file,data){
 
 let upd_rollback=function(s){
 	print('ugh rolling back');
-	File.remove('worker.js');
-	File.rename('worker.js.bak', 'worker.js');
+	File.remove(WORKER_FILE);
+	File.rename(WORKER_FILE+'.bak', WORKER_FILE);
 	s.status="COMMITED_OK";
 	write_data('updater_data.json',s);
 	Sys.reboot(5);
@@ -69,8 +74,8 @@ let upd_check=function(){
 	}else if(s.status==="TO_COMMIT"){
 		unCommitedUpdates=true;
 		print('Seems like changes to be commited');
-		File.rename('worker.js', 'worker.js.bak');
-		File.rename('worker.js.new', 'worker.js');
+		File.rename(WORKER_FILE, WORKER_FILE+'.bak');
+		File.rename(WORKER_FILE+'.new', WORKER_FILE);
 		Timer.set(10000  , 0, function() {
 			s = read_data('updater_data.json');
 			if(s.status==="COMMIED_OK"){
@@ -114,7 +119,7 @@ let ota_poll=function(){
 		success: function(body, full_http_msg) {
 			print(body); 
 			let args2=JSON.parse(body);
-			let fname="worker.js.new";
+			let fname=WORKER_FILE+".new";
 			File.remove(fname);
 			print('Update URL ',args2.url);
 			new_version=args2.version;
@@ -155,7 +160,7 @@ let s=upd_check();
 load(poll.program);
 
 RPC.addHandler('update',function(args){
-	fname="worker.js.new";
+	fname=WORKER_FILE+".new";
 	print('Updating from url... ',args.url);
 	download(args.url,fname,function(res){
 		if(res!==null){
