@@ -17,22 +17,22 @@ let blink_timer=-1;
 let blink_once=function()
 {
 
-  stop_blink(); 
-  GPIO.toggle(led);
+  stop_blink();
+  GPIO.write(led,1); 
   Sys.usleep(400)
   GPIO.toggle(led);
   Sys.usleep(400)
   GPIO.toggle(led);
   Sys.usleep(400)
-  GPIO.toggle(led);
+  GPIO.toggle(led); 
 
 };
 let start_blink=function()
 {
 
   blink_timer=Timer.set(100,Timer.REPEAT,function(arg){
-
-    GPIO.toggle(led);
+ 
+     GPIO.toggle(led);
 
   },null)
 
