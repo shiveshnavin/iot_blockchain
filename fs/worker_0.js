@@ -17,7 +17,12 @@ let blink_timer=-1;
 let blink_once=function()
 {
 
-  stop_blink();
+  if(blink_timer!==-1)
+  {
+    stop_blink();
+    Sys.usleep(600);
+  }
+  
   GPIO.write(led,1); 
   Sys.usleep(400)
   GPIO.toggle(led);
