@@ -4,22 +4,21 @@ load('api_config.js');
 load('api_http.js'); 
 load('api_events.js'); 
 load('api_rpc.js'); 
+load('api_gpio.js'); 
 
-let led = Cfg.get('board.led1.pin');           // Built-in LED GPIO number
+let DEVICE_NAME="iotain_0";
+let led =5;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number
 let onhi = Cfg.get('board.led1.active_high');  // LED on when high?
 let state = {on: false};  // Device state - LED on/off status
-function setOutput(on) {
-  let level = onhi ? on : !on;
-  GPIO.write(led, level);                // according to the delta
-  print('LED on ->', on);
-}
+ 
 GPIO.set_mode(led, GPIO.MODE_OUTPUT);  // And turn on/off the LED
 
 let blink_timer=-1;
 let blink_once=function()
 {
 
-  setOutput(state.on);
+  stop_blink(); 
+  GPIO.toggle(led);
   Sys.usleep(400)
   GPIO.toggle(led);
   Sys.usleep(400)
@@ -64,7 +63,7 @@ RPC.addHandler('blink',function(args){
   else if(args.val===2)
   {
     start_blink();
-    return {result:"stop_blink"};
+    return {result:"start_blink"};
   }
   else{
     stop_blink();
@@ -75,41 +74,27 @@ RPC.addHandler('blink',function(args){
 
 
 Cfg.set({wifi:{ap:{
-  ssid:"iot_0",pass:"password",enable:true,ip:"192.168.4.1"
+  ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.1"
   ,gw:"192.168.4.1",dhcp_start:"192.168.4.2",dhcp_end:"192.168.4.49"}}});
 
 
 
-Cfg.set({wifi:{sta:{ssid:"wifi",pass:"",enable:true}}});
+Cfg.set({wifi:{sta:{ssid:"JioFi2_00C3E7",pass:"ytf47mnfjn",enable:true}}});
 
-RPC.addHandler('call',function(args){
+RPC.addHandler('callback',function(args){
 
-
-  print("Called on IoT 0");
-  return {call:"Result of Iot 0"};
+  print("callback on "+DEVICE_NAME);
+  return {call:"callback Result of "+DEVICE_NAME};
 
 });
 
-Timer.set(3000,1,function(){
 
-  print("calling to Iot 1 : http://192.168.4.50/rpc/call");
-  HTTP.query({
-    url: 'http://192.168.4.50/rpc/call',
-    success: function(body, full_http_msg) { print(body); },
-    error: function(err) { print(err); }   
-  });
+RPC.addHandler('request',function(args){
 
+  print("request on "+DEVICE_NAME);
+  return {call:"request Result of "+DEVICE_NAME};
 
-  print("calling to PC 1 : http://192.168.43.32:8080/register");
-  HTTP.query({
-    url: 'http://192.168.43.32:8080/register',
-    success: function(body, full_http_msg) { print(body); },
-    error: function(err) { print(err); }   
-  });
-
-
-},null);
-
+});
 
 Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
   let evs = '???';
@@ -127,7 +112,7 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
 
 
 let v="25";
-print("Worker JS of IoT 0 v",v," Loaded");
+print("Worker JS of "+DEVICE_NAME+" v",v," Loaded");
 let upd_commit=function()
 {
     let s={
