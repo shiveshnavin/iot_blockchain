@@ -124,6 +124,39 @@ Right Terminal Shows Log on iot_1
 
 Idea is that when a device connected iot_0's AP makes a request to access PC (which is connected to same AP as iot_0) then iot_0 will recieve this request and make another request to PC , the result from the PC is required to be forwarded back to iot_1 which made the initial request thus facilitating callbacks
 
+### Test 2 : Base Firmware (9/10/18)
+
+Designing base firmware package on top of which prototyping will be done . Base firmwares are stored in 
+```code
+For ESP32 Devices fw_esp32.zip
+For ESP8266 Devices fw_esp8266.zip
+
+To Flash 
+mos flash fw_esp32.zip
+```
+Features of base firmware
+```
+1. Status LEDs status leds can be connected at GPIO 5 of both devices
+2. Create AP and connect to STA
+3. Show Wifi Connectivity status
+
+#### Test Case 0 
+Status LED blinking
+```
+RPC : http://192.168.4.1/rpc/blink
+POST Payload:
+
+{
+val:1
+}
+
+```
+Val = 1 : trigger blink_once()
+Val = 2 : trigger stop_blink()
+Val = 3 : trigger start_blink() 
+
+PASS
+
 ## TODO
 
 ### 1. Implement functionality to auto create a network structure , Module 3
