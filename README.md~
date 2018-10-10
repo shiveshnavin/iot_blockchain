@@ -151,9 +151,9 @@ val:1
 }
 
 ```
-Val 1 : trigger blink_once()
-Val 2 : trigger stop_blink()
-Val 3 : trigger start_blink() 
+Val = 1 : trigger blink_once()
+Val = 2 : trigger stop_blink()
+Val = 3 : trigger start_blink() 
 
 PASS
 

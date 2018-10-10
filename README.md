@@ -142,7 +142,7 @@ Features of base firmware
 
 #### Test Case 0 
 Status LED blinking
-```
+```code
 RPC : http://192.168.4.1/rpc/blink
 POST Payload:
 
