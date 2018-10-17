@@ -25,6 +25,8 @@ Under this network, the interconnection of IoT devices of a home, a business or 
 ### Internetwork Communication (CORE)  ( 02/10/18 )
 To make HTTP calls from once device routed through AP and that Routed through STA mode when device is working in AP+STA mode . This will be used for Chaining Up multiple devices , request forwarding and Callbacking [See Test 2]
 
+
+
 ### Implement Intercom functions (CORE)
 Write RPC listeners to listen to requests , check whether resource in avalable , if available  pass the request to resource access controller else pass the request to other devices .
 
@@ -39,6 +41,9 @@ on_resource()
 Make a table of resources availble on a device 
 
 ## Module 3: Network Structure Creation
+
+### WiFi Status LED behaviour (17/10/18)
+LED at pin 5 in blinking state when WiFi is connecting or disconnected and Solid ON when wifi connected
 
 ### Connect to Backbone network when available
 All devices connect to backbone network when in centralized mode
