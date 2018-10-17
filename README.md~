@@ -135,11 +135,11 @@ To Flash
 mos flash fw_esp32.zip
 ```
 Features of base firmware
-```
+```code
 1. Status LEDs status leds can be connected at GPIO 5 of both devices
 2. Create AP and connect to STA
 3. Show Wifi Connectivity status
-
+```
 #### Test Case 0 
 Status LED blinking
 ```code

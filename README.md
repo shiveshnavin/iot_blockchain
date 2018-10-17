@@ -142,6 +142,9 @@ Features of base firmware
 ```
 #### Test Case 0 
 Status LED blinking
+led pin : 5
+esp8266 - D1
+esp32 - D5
 ```code
 RPC : http://192.168.4.1/rpc/blink
 POST Payload:
