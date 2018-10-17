@@ -7,7 +7,7 @@ load('api_rpc.js');
 load('api_file.js'); 
 load('api_gpio.js'); 
 
-let DEVICE_NO="2";
+let DEVICE_NO="0";
 let DEVICE_NAME="iotain_"+DEVICE_NO;
 
 let led =5;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
@@ -69,6 +69,7 @@ if(s.status==="TO_COMMIT")
 {
   print("Updating Device Config");
   Cfg.set({wifi:{ap:AP}});
+  Cfg.set({device:{id:DEVICE_NAME}});
   Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true}}}); 
 }
 
@@ -103,6 +104,12 @@ let led_off=function()
 let start_blink=function()
 {
 
+  if(blink_timer!==-1)
+  {
+    stop_blink();
+    Sys.usleep(300);
+  }
+
   inhibit_led=0;
   blink_timer=Timer.set(100,Timer.REPEAT,function(arg){
 
@@ -127,7 +134,10 @@ let stop_blink=function()
   blink_timer=-1;
 
 };
+let wifi_scan=function()
+{
 
+};
 RPC.addHandler('blink',function(args){
 
   if(args===undefined)
