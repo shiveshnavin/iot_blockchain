@@ -106,7 +106,17 @@ if(s.status==="TO_COMMIT")
   Cfg.set({wifi:{sta:{ssid:"",pass:"",enable:true},sta_connect_timeout:30}}); 
 }
 else{
-   wifi_scan();
+  if(scan_timer!==-1)
+  {
+    Timer.del(scan_timer);
+  }
+  scan_timer=Timer.set(4000,Timer.REPEAT,function(){
+
+    if(prohibit_scan!==1)
+    {
+      wifi_scan();
+    }
+  },null);
 }
 
 
