@@ -18,11 +18,11 @@ app.engine('hbs',hbs({
 var PORT=8080
 var API_KEY="aezakmi";
 var HOST="http://54.227.87.51:"+PORT
-
+/*
 publicIp.v4().then(ip => {
     console.log("your public ip address", ip);
     HOST="http://"+ip+":"+PORT
-  });
+  });*/
 var OTA_FILES="./public"
 var getLatestVersion=function()
 {
@@ -232,6 +232,7 @@ let print=function()
         process.stdout.write(""+arguments[i]);
 
     }
+        process.stdout.write("\n");
     return s;
 }
 
@@ -276,26 +277,36 @@ let add_request=function(req)
 let on_request=function(req)
 {
     
+ 
     if(req.req_id===undefined)
     {
         return {result:"req_id is not defined"};
     }
 
     //todo
+    function_chutiyap({a:15,b:3,sign:'-'});
     
     return {response:null,status:"fwd_request"};
 };
 
 
 
+let function_chutiyap=function(nice)
+{
+
+let c=nice.a-nice.b;
 
 
+if(nice.sign==='-')
+{
+	print(c);
+}
+else
+{
+	print("Not found");
+}
 
-
-/**************** --NEHA *****************/
-/**************** ADIL *****************/
-
-
+};
 
 
 
