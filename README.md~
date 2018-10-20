@@ -42,6 +42,9 @@ Make a table of resources availble on a device
 
 ## Module 3: Network Structure Creation
 
+### WiFi Status LED behaviour (17/10/18)
+LED at pin 5 in blinking state when WiFi is connecting or disconnected and Solid ON when wifi connected
+
 ### Connect to Backbone network when available
 All devices connect to backbone network when in centralized mode
 
@@ -53,7 +56,7 @@ When backbone network goes down or when in chained mode , trigger a scan and con
 ## Overview of Project
 ![Alt text](screenshots/plan0.jpg "Main Screen")
 ![Alt text](screenshots/plan1.jpg "Main Screen") 
-
+![Alt text](screenshots/plan2.jpg "Main Screen")  
 ## Tests
 
 ### Test 1 : To check if a device is cabale of autoconnecting in sta mode when the AP is available   ( 01/10/18 )

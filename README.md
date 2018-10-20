@@ -56,7 +56,7 @@ When backbone network goes down or when in chained mode , trigger a scan and con
 ## Overview of Project
 ![Alt text](screenshots/plan0.jpg "Main Screen")
 ![Alt text](screenshots/plan1.jpg "Main Screen") 
-
+![Alt text](screenshots/plan2.jpg "Main Screen")  
 ## Tests
 
 ### Test 1 : To check if a device is cabale of autoconnecting in sta mode when the AP is available   ( 01/10/18 )

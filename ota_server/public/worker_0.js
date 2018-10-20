@@ -1,235 +1,329 @@
-load('api_sys.js'); 
-load('api_wifi.js'); 
-load('api_config.js'); 
-load('api_http.js'); 
-load('api_events.js'); 
-load('api_rpc.js'); 
-load('api_file.js'); 
-load('api_gpio.js'); 
+var express=require('express')
+var app=express()
+var hbs=require('express-handlebars')
+var path=require('path')
+var fs=require('fs')
+var array=require('array')
+var publicIp=require('public-ip')
+var formidable = require('formidable'); 
+var bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json());
 
-let DEVICE_NO="0";
-let DEVICE_NAME="iotain_"+DEVICE_NO;
 
-let led =5;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
 
-let s = read_data('updater_data.json');
-let read_data=function(file){
-	let clon=File.read(file);
-	if(clon===null || clon===undefined){
-		return {status:"COMMITED_OK"};
-	}
-	if(clon.length<5)
-	{
-		print('length of user_data.json is ',clon.length);
-		return null;
+app.engine('hbs',hbs({
+    extname:"hbs"
+}))
+var PORT=8080
+var API_KEY="aezakmi";
+var HOST="http://54.227.87.51:"+PORT
 
-	}
-	return JSON.parse(clon);
+publicIp.v4().then(ip => {
+    console.log("your public ip address", ip);
+    HOST="http://"+ip+":"+PORT
+  });
+var OTA_FILES="./public"
+var getLatestVersion=function()
+{
+    var version=10;
+    var otaDir=fs.readdirSync(OTA_FILES);
+    var otafls=array();
+    console.log(JSON.stringify(otaDir))
+    var i=0
+    for(i;i<otaDir.length;i++)
+    {
+       
+        var file=otaDir[i];
+        var ver=file.replace("_worker.js","");
+       // console.log("File : "+otaDir[i]+" Version : "+ver);
+        if(ver>version)
+        {
+            version=ver;
+        }
+         
+    }
+    
+
+
+    return parseInt(version);
 };
+; 
+var OTA={
 
-let AP={
-  ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.50"
-  ,gw:"192.168.4.50",dhcp_start:"192.168.4.51",dhcp_end:"192.168.4.99"};
+    getOTAFile:function(version)
+    {
+        
+        return  version+"_worker.js";
 
- if(DEVICE_NO==="0")
- {
-   //IOT0 esp32
+    },
+    getOTAVersion:function()
+    {
 
-
-  AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.1"
-    ,gw:"192.168.4.1",dhcp_start:"192.168.4.2",dhcp_end:"192.168.4.49"}
-
- }
- else if(DEVICE_NO==="0")
- {
-   //IOT1 esp8266 led bad
-
-   
-   AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.50"
-    ,gw:"192.168.4.50",dhcp_start:"192.168.4.51",dhcp_end:"192.168.4.99"};
-
- }
- else if(DEVICE_NO==="0")
- {
-   // IOT2 esp8266 led good
-
-   AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.100"
-    ,gw:"192.168.4.100",dhcp_start:"192.168.4.101",dhcp_end:"192.168.4.149"};
-   
- }
-print('==========',DEVICE_NAME,"=========");
-print(' AP '+JSON.stringify(AP));
-print("WIFI ",Cfg.get("wifi.sta.ssid")," : ",Cfg.get("wifi.sta.pass"));
-print('==========',Cfg.get("device.id"),"=========");
-
-if(s.status==="TO_COMMIT")
-{
-  print("Updating Device Config");
-  Cfg.set({wifi:{ap:AP}});
-  Cfg.set({device:{id:DEVICE_NAME}});
-  Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true}}}); 
+        return getLatestVersion();
+        
+    },
+    getChangeLog:function()
+    {
+        return "New Update with loads of new Features !"
+    }
 }
+  
 
-
-RPC.addHandler('wifi',function(args)
+var getHashToken=function(key,version)
 {
 
-  Cfg.set({wifi:{sta:{ssid:args.ssid,pass:args.pass,enable:false}}});
-  let wifi_setup=ffi('void change_wifi()');
- 
-  return {status:true};
+    return key;
+
+
+}
+app.set('view engine','hbs')
+app.use(express.static(path.join(__dirname,'public')))
+
+app.get('/',function(req,res){
+
+
+    console.log("Called API");
+    res.send("This is Mansaa OTA Server . use ota_poll");
+
+
+})
+app.get('/hitme',function(req,res){
+
+
+    console.log("Called API");
+    res.send({result:true});
+
+
+})
+
+app.get('/register',function(req,res){
+
+    var currentdate = new Date();
+    console.log(""+currentdate.getTime()+" - Device Keep Alive Call");
+    res.send({call:"Result of PC "});
+
 
 })
 
 
-GPIO.set_mode(led, GPIO.MODE_OUTPUT);  // And turn on/off the LED
+app.get('/ota_poll',function(req,res){
 
-let blink_timer=-1;
-let inhibit_led=0;
-let blink_once=function()
-{
+        let result={
+            message:"Update Poll OK",
+            status:false
 
-  stop_blink(); 
-  GPIO.toggle(led);
-  Sys.usleep(400)
-  GPIO.toggle(led);
-  Sys.usleep(400)
-  GPIO.toggle(led);
-  Sys.usleep(400)
-  GPIO.toggle(led);
+        }
+        if(req.query.api_key==null || req.query.api_key!=API_KEY)
+        {
+            result.message="API Key Invalid"
+            res.send(result);
+            return;
+        }
+        if(req.query.version==null)
+        {
+            result.message="Invalid Version code";
+            res.send(result);
+            return;
+        }
 
-};
-let led_on=function()
-{
-  GPIO.write(led,1);
-};
+        if(req.query.version>=OTA.getOTAVersion())
+        {
+            result.message="Already Up To Date !";
+            res.send(result);
+            return;
+        }
+        /*result.url=HOST+"/ota_download?token="+getHashToken(req.query.api_key,req.query.version)
+        +"&version="+OTA.getOTAVersion()
+        ;*/
 
-let led_off=function()
-{
-  GPIO.write(led,0);
-};
+	result.url=HOST+"/"+OTA.getOTAFile(getLatestVersion())
+        result.status=true;
+        result.change_log=OTA.getChangeLog();
+        result.version=OTA.getOTAVersion();
 
-let start_blink=function()
-{
+        res.send(result);
+    
 
-  if(blink_timer!==-1)
-  {
-    stop_blink();
-    Sys.usleep(300);
-  }
-
-  inhibit_led=0;
-  blink_timer=Timer.set(100,Timer.REPEAT,function(arg){
+})
 
 
-    if(inhibit_led===1)
-    {
-      return;
+app.get('/ota_download',function(req,res){
+
+    let result={
+        message:""
+
     }
-    GPIO.toggle(led); 
+    if(req.query.token==null || req.query.token!=API_KEY)
+    {
+        result.message="API Key Invalid"
+        res.writeHead(503);
+        res.write(result.message);
+        res.end();
+        return;
+    }
+    if(req.query.version==null)
+    {
+        result.message="Empty Version code";
+        res.writeHead(503);
+        res.write(result.message);
+        res.end();
+        return;
+    }
+ 
+    res.setHeader('content-type','text/plain');
+    try{ 
+    var firmware=fs.readFileSync(OTA.getOTAFile(req.query.version));
+    }catch(e)
+    {
+        result.message="Invalid Version code";
+        res.writeHead(404);
+        res.write(result.message);
+        res.end();
+        return;
+    }
+     
+    res.write(firmware);
+    res.end();
 
-  },null)
-
-};
-
-let stop_blink=function()
-{
-  inhibit_led=1;
-  if(blink_timer!==-1)
-  {
-    Timer.del(blink_timer);
-  }
-  blink_timer=-1;
-
-};
-let wifi_scan=function()
-{
-
-};
-RPC.addHandler('blink',function(args){
-
-  if(args===undefined)
-  {
-    return {result:"undefined args"};
-  }
-
-  if(args.val===1)
-  {
-    blink_once();
-    return {result:"blink_once"};
-  }
-  else if(args.val===2)
-  {
-    start_blink();
-    return {result:"start_blink"};
-  }
-  else{
-    stop_blink();
-    return {result:"stop_blink"};
-  }
-
-});  
-
-RPC.addHandler('callback',function(args){
-
-  print("callback on "+DEVICE_NAME);
-  return {call:"callback Result of "+DEVICE_NAME};
 
 });
 
+app.all("/ota_upload",function(req,res){
 
-RPC.addHandler('request',function(args){
+            var form = new formidable.IncomingForm();
+            form.parse(req, function (err, fields, files) {
+            var oldpath = files.filetoupload.path;
+            var newpath = OTA_FILES +"/"+ (getLatestVersion()+1)+"_worker.js";
+            fs.rename(oldpath, newpath, function (err) {
+                if (err) throw err;
+                res.write('Update Published ! to '+newpath);
+                res.end();
+            });
 
-  print("request on "+DEVICE_NAME);
-  return {call:"request Result of "+DEVICE_NAME};
-
-});
-
-start_blink();
-Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
-  let evs = '???';
-  if (ev === Net.STATUS_DISCONNECTED) {
-    start_blink();
-    evs = 'DISCONNECTED';
-  } else if (ev === Net.STATUS_CONNECTING) {
-    evs = 'CONNECTING';
-  } else if (ev === Net.STATUS_CONNECTED) {
-    led_on();
-    evs = 'CONNECTED';
-  } else if (ev === Net.STATUS_GOT_IP) {
-    evs = 'GOT_IP';
-    stop_blink();
-    led_on();
-
-  }
-  print('== Net event:', ev, evs);
-}, null);
+        })
+})
 
 
-let v="25";
-print("Worker JS of "+DEVICE_NAME+" v",v," Loaded");
-let upd_commit=function()
-{
-    let s={
-      firmware_version:v,
-      status:"COMMIED_OK"
-    }; 
-    File.write(JSON.stringify(s),"updater_data.json");
 
-};
 
+app.all("/ota",function(req,res){
+
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.write('<form action="ota_upload" method="post" enctype="multipart/form-data">');
+    res.write('<input type="file" name="filetoupload"><br>');
+    res.write('<input type="submit">');
+    res.write('</form>');
+    return res.end();
  
+})
 
 
- 
-if(s.status==="TO_COMMIT")
+app.listen(PORT,function(){
+    console.log('Server Started');
+})
+
+/**************** MJS *****************/
+let print=function()
 {
+    var s = 0;
+    for (var i=0; i < arguments.length; i++) {
 
-  upd_commit();
-  Sys.reboot(10);
+        process.stdout.write(""+arguments[i]);
+
+    }
+    return s;
 }
-upd_commit();
 
+
+
+
+/**************** --MJS *****************/
+/**************** NEHA *****************/
+let connected_devices=[{ip:"192.168.0.1",name:"iotain_0"}];
+let fwd_request=function(req)
+{
+	//fwd reuest to all connected_devices by http call
+}
+let on_callback=function(req)
+{
+
+
+
+};
+
+let resources=[{res_id:1234,res_name:"Ultrasound sensor"},
+{res_id:12364,res_name:"Ultrasound sensor"},
+{res_id:1239,res_name:"Ultrasound sensor"}];
+let find_resource=function(job)
+{
+
+    //todo
+
+};
+let perform_job=function(job)
+{
+    print("Performing ",job.res_name);
+    return job;
+
+};
+
+
+
+let requests=
+[] ;
+
+let find_request=function(req)
+{
+    
+    //todo
+
+};
+let add_request=function(req)
+{
+
+    //todo
+ 
+};
+
+//req_id,src_ip,src_name,job,status
+let on_request=function(req)
+{
+    
+    if(req.req_id===undefined)
+    {
+        return {result:"req_id is not defined"};
+    }
+
+    //todo
+    
+    return {response:null,status:"fwd_request"};
+};
+
+
+
+
+
+
+
+
+/**************** --NEHA *****************/
+/**************** ADIL *****************/
+
+
+
+
+
+
+
+/**************** --ADIL *****************/
+
+
+
+app.all("/neha/on_request",function(req,res){
+
+   
+   res.send( on_request(req.body) );
+  
+ })
+ 
