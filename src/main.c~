@@ -100,10 +100,10 @@ done:
 }
 
 
-void change_wifi()
+bool change_wifi()
 {
  
-mgos_wifi_setup((struct mgos_config_wifi *) mgos_sys_config_get_wifi())
+return mgos_wifi_setup((struct mgos_config_wifi *) mgos_sys_config_get_wifi());
 
 }
 

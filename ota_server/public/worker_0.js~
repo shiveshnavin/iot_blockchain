@@ -10,8 +10,9 @@ load('api_gpio.js');
 let DEVICE_NO="0";
 let DEVICE_NAME="iotain_"+DEVICE_NO;
 
-let led =2;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
+let led =5;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
 
+let wifi_setup=ffi('bool change_wifi()');
 let s = read_data('updater_data.json');
 let read_data=function(file){
 	let clon=File.read(file);
@@ -65,48 +66,12 @@ print(' AP '+JSON.stringify(AP));
 print("WIFI ",Cfg.get("wifi.sta.ssid")," : ",Cfg.get("wifi.sta.pass"));
 print('==========',Cfg.get("device.id"),"=========");
 
-
-let wifi_setup=ffi('void change_wifi()');
-let scan_timer=-1;
-let prohibit_scan=0;
-let wifi_connect=function(ssid,pass)
-{
-    Cfg.set({wifi:{sta:{ssid:ssid,pass:pass,enable:true}}});
-    Sys.usleep(1000);
-    print("Connecting to ",ssid,' -- ',pass);
-    wifi_setup();
-
-};
-let iotains=[];
-let wifi_scan=function()
-{
-  print("Scaiing...");
-  Wifi.scan(function(results) {
-    for(let i=0;i<results.length;i++)
-    {
-      if(results[i].ssid.indexOf("iotain")>-1)
-      {
-        iotains.push(results[i]);
-        print("Found IOTAIN ",results[i].ssid);
-      }
-    } 
-
-
-  });
-
-
-};
-
-
 if(s.status==="TO_COMMIT")
 {
   print("Updating Device Config");
   Cfg.set({wifi:{ap:AP}});
   Cfg.set({device:{id:DEVICE_NAME}});
-  Cfg.set({wifi:{sta:{ssid:"",pass:"",enable:true},sta_connect_timeout:30}}); 
-}
-else{
-   wifi_scan();
+  Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true},sta_connect_timeout:10}}); 
 }
 
 
@@ -181,31 +146,10 @@ let stop_blink=function()
   blink_timer=-1;
 
 };
-/***
- *  {"ssid":"iotain_1","channel":6,"rssi":-50,"authMode":3,"bssid":"5e:cf:7f:3d:5b:7c"} 
-[Oct 21 00:02:34.014] {"ssid":"Swati_Niwas","channel":6,"rssi":-54,"authMode":4,"bssid":"04:95:e6:62:38:68"} 
-[Oct 21 00:02:34.029] {"ssid":"iotain_2","channel":6,"rssi":-62,"authMode":3,"bssid":"86:f3:eb:94:ad:98"} 
-
-
- */
-
-let status={ap:AP,sta_ip:"0.0.0.0"};
-
-let get_status=function()
+let wifi_scan=function()
 {
 
-    return {status:status};
-
 };
-
-/*******************RPC*****************/
-
-RPC.addHandler('status',function(args){
-  
-  return get_status();
-
-});
-
 RPC.addHandler('blink',function(args){
 
   if(args===undefined)
@@ -230,14 +174,17 @@ RPC.addHandler('blink',function(args){
 
 });  
 
-let ar=[];
+let wifi_setup=ffi('void change_wifi()');
+
 RPC.addHandler('wifi',function(args){
- 
-    wifi_scan();
-    return {result:"Scanning..."};
+
+    Cfg.set({wifi:{sta:{ssid:args.ssid,pass:args.pass}}});
+    return {result:wifi_setup()};
   
 });
- 
+
+
+
 RPC.addHandler('callback',function(args){
 
   print("callback on "+DEVICE_NAME);
@@ -254,55 +201,20 @@ RPC.addHandler('request',function(args){
 });
 
 start_blink();
-let diconnect_count=0;
 Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
   let evs = '???';
   if (ev === Net.STATUS_DISCONNECTED) {
     start_blink();
     evs = 'DISCONNECTED';
-    status.sta_ip="0.0.0.0";
-    diconnect_count++;
-    print("Still Disconnected ",diconnect_count);
-    if(diconnect_count>3)
-    {
-      diconnect_count=0;
-      Cfg.set({wifi:{sta:{ssid:"",pass:"",enable:false}}});
-      wifi_setup();
-      Sys.usleep(2000);
-      Cfg.set({wifi:{sta:{enable:true}}});
-      if(scan_timer!==-1)
-      {
-        Timer.del(scan_timer);
-      }
-      prohibit_scan=0;
-      scan_timer=Timer.set(4000,Timer.REPEAT,function(){
-
-        if(prohibit_scan===2)
-        {
-          wifi_setup();
-        }
-        prohibit_scan++;
-        wifi_scan();
-
-      },null);
-
-    }
   } else if (ev === Net.STATUS_CONNECTING) {
     evs = 'CONNECTING';
   } else if (ev === Net.STATUS_CONNECTED) {
-    diconnect_count=0;
     led_on();
     evs = 'CONNECTED';
   } else if (ev === Net.STATUS_GOT_IP) {
     evs = 'GOT_IP';
     stop_blink();
     led_on();
-
-      RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) {
-       
-        status.sta_ip = resp.wifi.sta_ip;
-
-      }, null);
 
   }
   print('== Net event:', ev, evs);
