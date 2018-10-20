@@ -74,6 +74,17 @@ if(s.status==="TO_COMMIT")
 }
 
 
+RPC.addHandler('wifi',function(args)
+{
+
+  Cfg.set({wifi:{sta:{ssid:args.ssid,pass:args.pass,enable:false}}});
+  let wifi_setup=ffi('void change_wifi()');
+ 
+  return {status:true};
+
+})
+
+
 GPIO.set_mode(led, GPIO.MODE_OUTPUT);  // And turn on/off the LED
 
 let blink_timer=-1;
@@ -210,7 +221,10 @@ let upd_commit=function()
 
 };
 
+ 
 
+
+ 
 if(s.status==="TO_COMMIT")
 {
 

@@ -5,7 +5,12 @@ var path=require('path')
 var fs=require('fs')
 var array=require('array')
 var publicIp=require('public-ip')
-var formidable = require('formidable');
+var formidable = require('formidable'); 
+var bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json());
+
+
 
 app.engine('hbs',hbs({
     extname:"hbs"
@@ -217,3 +222,93 @@ app.all("/ota",function(req,res){
 app.listen(PORT,function(){
     console.log('Server Started');
 })
+
+/**************** MJS *****************/
+let print=function()
+{
+    var s = 0;
+    for (var i=0; i < arguments.length; i++) {
+
+        process.stdout.write(""+arguments[i]);
+
+    }
+    return s;
+}
+
+
+
+
+/**************** --MJS *****************/
+/**************** NEHA *****************/
+
+
+let resources=[];
+let find_resource=function(job)
+{
+
+    //todo
+
+};
+let perform_job=function(job)
+{
+    print("Performing ",job.res_name);
+    return job;
+
+};
+
+
+
+let requests=[];
+let find_request=function(req)
+{
+    
+    //todo
+
+};
+let add_request=function(req)
+{
+
+    //todo
+
+};
+
+//req_id,src_ip,src_name,job,status
+let on_request=function(req)
+{
+    
+    if(req.req_id===undefined)
+    {
+        return {result:"req_id is not defined"};
+    }
+
+    //todo
+    
+    return {response:null,status:"fwd_request"};
+};
+
+
+
+
+
+
+
+/**************** --NEHA *****************/
+/**************** ADIL *****************/
+
+
+
+
+
+
+
+/**************** --ADIL *****************/
+
+
+
+app.all("/neha/on_request",function(req,res){
+
+   
+   res.send( on_request(req.body) );
+  
+ })
+ 
