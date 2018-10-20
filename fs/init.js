@@ -157,8 +157,6 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
 	}
 }, null);
 
-let s=upd_check();
-load(poll.program);
 
 RPC.addHandler('update',function(args){
 	fname=WORKER_FILE+".new";
@@ -193,3 +191,7 @@ RPC.addHandler('downloadFile',function(args){
 	});
 	return {"result":"File Download Start!"};
 });
+
+
+let s=upd_check();
+load(poll.program);

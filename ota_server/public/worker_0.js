@@ -104,21 +104,7 @@ if(s.status==="TO_COMMIT")
   Cfg.set({wifi:{ap:AP}});
   Cfg.set({device:{id:DEVICE_NAME}});
   Cfg.set({wifi:{sta:{ssid:"",pass:"",enable:true},sta_connect_timeout:30}}); 
-}
-else{
-  if(scan_timer!==-1)
-  {
-    Timer.del(scan_timer);
-  }
-  scan_timer=Timer.set(4000,Timer.REPEAT,function(){
-
-    if(prohibit_scan!==1)
-    {
-      wifi_scan();
-    }
-  },null);
-}
-
+} 
 
 RPC.addHandler('wifi',function(args)
 {
@@ -243,8 +229,8 @@ RPC.addHandler('blink',function(args){
 let ar=[];
 RPC.addHandler('wifi',function(args){
  
-    wifi_scan();
-    return {result:"Scanning..."};
+    Cfg.set({wifi:{sta:{ssid:args.ssid,pass:args.pass}}});
+    return {result:"Set Credentials"};
   
 });
  
@@ -263,6 +249,7 @@ RPC.addHandler('request',function(args){
 
 });
 
+let index=0;
 start_blink();
 let diconnect_count=0;
 Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
@@ -272,29 +259,28 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
     evs = 'DISCONNECTED';
     status.sta_ip="0.0.0.0";
     diconnect_count++;
+    if(scan_timer!==-1)
+    {
+      Timer.del(scan_timer);
+    }
     print("Still Disconnected ",diconnect_count);
-    if(diconnect_count>3)
+    if(diconnect_count>2)
     {
       diconnect_count=0;
-      Cfg.set({wifi:{sta:{ssid:"",pass:"",enable:false}}});
-      wifi_setup();
-      Sys.usleep(2000);
-      Cfg.set({wifi:{sta:{enable:true}}});
-      if(scan_timer!==-1)
+      if(iotains!==undefined && iotains.length>0)
       {
-        Timer.del(scan_timer);
+        if(index===iotains.length)
+          index=0;
+        print("Connecting to ...",iotains[index].ssid);
+        Cfg.set({wifi:{sta:{ssid:iotains[index++].ssid,pass:"password",enable:true}}});
+        wifi_setup();
+
       }
-      prohibit_scan=0;
-      scan_timer=Timer.set(4000,Timer.REPEAT,function(){
+      else{
 
-        if(prohibit_scan===2)
-        {
-          wifi_setup();
-        }
-        prohibit_scan++;
-        wifi_scan();
-
-      },null);
+        print("Iotains Undefinde or 0");
+      }
+      
 
     }
   } else if (ev === Net.STATUS_CONNECTING) {
@@ -313,6 +299,19 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
         status.sta_ip = resp.wifi.sta_ip;
 
       }, null);
+      if(scan_timer!==-1)
+      {
+        Timer.del(scan_timer);
+      }
+      scan_timer=Timer.set(10000,Timer.REPEAT,function(){
+
+        if(prohibit_scan!==1)
+        {
+          wifi_scan();
+        }
+      },null);
+
+
 
   }
   print('== Net event:', ev, evs);
