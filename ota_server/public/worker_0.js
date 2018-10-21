@@ -7,7 +7,7 @@ load('api_rpc.js');
 load('api_file.js'); 
 load('api_gpio.js'); 
 
-let DEVICE_NO="3";
+let DEVICE_NO="2";
 let DEVICE_NAME="iotain_"+DEVICE_NO;
 
 let led =5;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
@@ -28,59 +28,9 @@ let read_data=function(file){
 };
 
 let  AP={
-  ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.1"
-  ,gw:"192.168.4.1",dhcp_start:"192.168.4.2",dhcp_end:"192.168.4.49"};
-
- if(DEVICE_NO==="0")
- {
-   //IOT0 esp32
-
-
-  AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.1"
-    ,gw:"192.168.4.1",dhcp_start:"192.168.4.2",dhcp_end:"192.168.4.19"}
-
- }
- else if(DEVICE_NO==="1")
- {
-   //IOT1 esp8266 led bad
-
-   
-   AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.20"
-    ,gw:"192.168.4.20",dhcp_start:"192.168.4.21",dhcp_end:"192.168.4.39"};
-
- }
- else if(DEVICE_NO==="2")
- {
-   // IOT2 esp8266 led good
-
-   AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.40"
-    ,gw:"192.168.4.40",dhcp_start:"192.168.4.41",dhcp_end:"192.168.4.59"};
-   
- }else if(DEVICE_NO==="3")
- {
-   // IOT2 esp8266 led good
-
-   AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.60"
-    ,gw:"192.168.4.60",dhcp_start:"192.168.4.61",dhcp_end:"192.168.4.79"};
-   
- }else if(DEVICE_NO==="4")
- {
-   // IOT2 esp8266 led good
-
-   AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.80"
-    ,gw:"192.168.4.80",dhcp_start:"192.168.4.81",dhcp_end:"192.168.4.99"};
-   
- } 
- else{
-  AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.100"
-    ,gw:"192.168.4.1",dhcp_start:"192.168.4.151",dhcp_end:"192.168.4.199"}
- }
+  ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168."+DEVICE_NO+".1"
+  ,gw:"192.168."+DEVICE_NO+".1",dhcp_start:"192.168."+DEVICE_NO+".2",dhcp_end:"192.168."+DEVICE_NO+".100"};
+ 
 print('==========',DEVICE_NAME,"=========");
 print(' AP '+JSON.stringify(AP));
 print("WIFI ",Cfg.get("wifi.sta.ssid")," : ",Cfg.get("wifi.sta.pass"));
