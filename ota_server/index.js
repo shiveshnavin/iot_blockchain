@@ -243,7 +243,7 @@ let print=function()
 /**************** NEHA *****************/
 
 
-let resources=[];
+let resources=[{"res_name":"diring room led","res_id":19912},{"res_name":"diring room led","res_id":19935},{"res_name":"diring room led","res_id":1957}];
 let find_resource=function(job)
 {
 
@@ -275,16 +275,15 @@ let add_request=function(req)
 
 //req_id,src_ip,src_name,job,status
 let on_request=function(req)
-{
-    
- 
+{ 
+	{ 
     if(req.req_id===undefined)
     {
         return {result:"req_id is not defined"};
     }
 
     //todo
-    function_chutiyap({a:15,b:3,sign:'-'});
+  
     
     return {response:null,status:"fwd_request"};
 };
