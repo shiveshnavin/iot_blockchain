@@ -276,7 +276,7 @@ let add_request=function(req)
 //req_id,src_ip,src_name,job,status
 let on_request=function(req)
 { 
-	{ 
+ 
     if(req.req_id===undefined)
     {
         return {result:"req_id is not defined"};

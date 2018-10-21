@@ -7,7 +7,7 @@ load('api_events.js');
 load('api_net.js');
 load('api_config.js');
 
-let wifi_setup=ffi('bool change_wifi()');
+let wifi_setup=ffi('bool change_wifi()'); 
 let read_data=function(file){
 	let clon=File.read(file);
 	if(clon===null || clon===undefined){

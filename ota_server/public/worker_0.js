@@ -7,7 +7,7 @@ load('api_rpc.js');
 load('api_file.js'); 
 load('api_gpio.js'); 
 
-let DEVICE_NO="0";
+let DEVICE_NO="3";
 let DEVICE_NAME="iotain_"+DEVICE_NO;
 
 let led =2;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
@@ -27,9 +27,9 @@ let read_data=function(file){
 	return JSON.parse(clon);
 };
 
-let AP={
-  ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.50"
-  ,gw:"192.168.4.50",dhcp_start:"192.168.4.51",dhcp_end:"192.168.4.99"};
+let  AP={
+  ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.1"
+  ,gw:"192.168.4.1",dhcp_start:"192.168.4.2",dhcp_end:"192.168.4.49"};
 
  if(DEVICE_NO==="0")
  {
@@ -41,7 +41,7 @@ let AP={
     ,gw:"192.168.4.1",dhcp_start:"192.168.4.2",dhcp_end:"192.168.4.49"}
 
  }
- else if(DEVICE_NO==="0")
+ else if(DEVICE_NO==="1")
  {
    //IOT1 esp8266 led bad
 
@@ -51,7 +51,7 @@ let AP={
     ,gw:"192.168.4.50",dhcp_start:"192.168.4.51",dhcp_end:"192.168.4.99"};
 
  }
- else if(DEVICE_NO==="0")
+ else if(DEVICE_NO==="2")
  {
    // IOT2 esp8266 led good
 
@@ -59,6 +59,27 @@ let AP={
     ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.100"
     ,gw:"192.168.4.100",dhcp_start:"192.168.4.101",dhcp_end:"192.168.4.149"};
    
+ }else if(DEVICE_NO==="3")
+ {
+   // IOT2 esp8266 led good
+
+   AP={
+    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.100"
+    ,gw:"192.168.4.100",dhcp_start:"192.168.4.101",dhcp_end:"192.168.4.149"};
+   
+ }else if(DEVICE_NO==="4")
+ {
+   // IOT2 esp8266 led good
+
+   AP={
+    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.100"
+    ,gw:"192.168.4.100",dhcp_start:"192.168.4.101",dhcp_end:"192.168.4.149"};
+   
+ } 
+ else{
+  AP={
+    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.150"
+    ,gw:"192.168.4.1",dhcp_start:"192.168.4.151",dhcp_end:"192.168.4.199"}
  }
 print('==========',DEVICE_NAME,"=========");
 print(' AP '+JSON.stringify(AP));
@@ -77,7 +98,7 @@ let wifi_connect=function(ssid,pass)
     wifi_setup();
 
 };
-let iotains=[];
+let iotains=["iotain_0","iotain_1","iotain_2","iotain_3","iotain_4"];
 let wifi_scan=function()
 {
   print("Scaiing...");
@@ -103,20 +124,20 @@ if(s.status==="TO_COMMIT")
   print("Updating Device Config");
   Cfg.set({wifi:{ap:AP}});
   Cfg.set({device:{id:DEVICE_NAME}});
-  Cfg.set({wifi:{sta:{ssid:"",pass:"",enable:true},sta_connect_timeout:30}}); 
+
+  if(iotains[0]===DEVICE_NAME)
+  {
+    Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true},sta_connect_timeout:10}}); 
+  }
+  else{
+
+    Cfg.set({wifi:{sta:{ssid:iotains[0],pass:"password",enable:true},sta_connect_timeout:10}}); 
+  }
+  
+
 } 
 
-RPC.addHandler('wifi',function(args)
-{
-
-  Cfg.set({wifi:{sta:{ssid:args.ssid,pass:args.pass,enable:false}}});
-  let wifi_setup=ffi('void change_wifi()');
  
-  return {status:true};
-
-})
-
-
 GPIO.set_mode(led, GPIO.MODE_OUTPUT);  // And turn on/off the LED
 
 let blink_timer=-1;
@@ -230,10 +251,16 @@ let ar=[];
 RPC.addHandler('wifi',function(args){
  
     Cfg.set({wifi:{sta:{ssid:args.ssid,pass:args.pass}}});
+    wifi_setup();
     return {result:"Set Credentials"};
   
 });
+RPC.addHandler('wifi_scan',function(args){
  
+  scan_wifi();
+  return {result:"Scanning..."};
+
+});
 RPC.addHandler('callback',function(args){
 
   print("callback on "+DEVICE_NAME);
@@ -259,28 +286,25 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
     evs = 'DISCONNECTED';
     status.sta_ip="0.0.0.0";
     diconnect_count++;
-    if(scan_timer!==-1)
-    {
-      Timer.del(scan_timer);
-    }
+  
     print("Still Disconnected ",diconnect_count);
-    if(diconnect_count>2)
+    if(diconnect_count===2)
     {
-      diconnect_count=0;
-      if(iotains!==undefined && iotains.length>0)
+      diconnect_count=0; 
+      if(iotains[index]===DEVICE_NAME || iotains[index]===Cfg.get("wifi.sta.ssid"))
       {
-        if(index===iotains.length)
-          index=0;
-        print("Connecting to ...",iotains[index].ssid);
-        Cfg.set({wifi:{sta:{ssid:iotains[index++].ssid,pass:"password",enable:true}}});
-        wifi_setup();
-
+        index++;
+        if(iotains[index]===DEVICE_NAME || iotains[index]===Cfg.get("wifi.sta.ssid"))
+        {
+          index++;
+        }
       }
-      else{
+      if(index===iotains.length)
+        index=0;
+      print("Connecting to ",iotains[index]);
+      Cfg.set({wifi:{sta:{ssid:iotains[index++],pass:"password"}}});
+      wifi_setup();
 
-        print("Iotains Undefinde or 0");
-      }
-      
 
     }
   } else if (ev === Net.STATUS_CONNECTING) {
@@ -298,20 +322,7 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
        
         status.sta_ip = resp.wifi.sta_ip;
 
-      }, null);
-      if(scan_timer!==-1)
-      {
-        Timer.del(scan_timer);
-      }
-      scan_timer=Timer.set(10000,Timer.REPEAT,function(){
-
-        if(prohibit_scan!==1)
-        {
-          wifi_scan();
-        }
-      },null);
-
-
+      }, null); 
 
   }
   print('== Net event:', ev, evs);

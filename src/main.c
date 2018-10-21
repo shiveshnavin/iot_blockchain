@@ -98,15 +98,14 @@ done:
   free(url);
   free(path);
 }
-
-
+  
 bool change_wifi()
 {
  
-return mgos_wifi_setup((struct mgos_config_wifi *) mgos_sys_config_get_wifi());
+	return mgos_wifi_setup((struct mgos_config_wifi *) mgos_sys_config_get_wifi());
 
 }
-
+ 
 
 enum mgos_app_init_result mgos_app_init(void) {
 
