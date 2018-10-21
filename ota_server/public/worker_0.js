@@ -10,7 +10,7 @@ load('api_gpio.js');
 let DEVICE_NO="3";
 let DEVICE_NAME="iotain_"+DEVICE_NO;
 
-let led =2;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
+let led =5;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
 
 let s = read_data('updater_data.json');
 let read_data=function(file){
@@ -38,7 +38,7 @@ let  AP={
 
   AP={
     ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.1"
-    ,gw:"192.168.4.1",dhcp_start:"192.168.4.2",dhcp_end:"192.168.4.49"}
+    ,gw:"192.168.4.1",dhcp_start:"192.168.4.2",dhcp_end:"192.168.4.19"}
 
  }
  else if(DEVICE_NO==="1")
@@ -47,8 +47,8 @@ let  AP={
 
    
    AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.50"
-    ,gw:"192.168.4.50",dhcp_start:"192.168.4.51",dhcp_end:"192.168.4.99"};
+    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.20"
+    ,gw:"192.168.4.20",dhcp_start:"192.168.4.21",dhcp_end:"192.168.4.39"};
 
  }
  else if(DEVICE_NO==="2")
@@ -56,29 +56,29 @@ let  AP={
    // IOT2 esp8266 led good
 
    AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.100"
-    ,gw:"192.168.4.100",dhcp_start:"192.168.4.101",dhcp_end:"192.168.4.149"};
+    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.40"
+    ,gw:"192.168.4.40",dhcp_start:"192.168.4.41",dhcp_end:"192.168.4.59"};
    
  }else if(DEVICE_NO==="3")
  {
    // IOT2 esp8266 led good
 
    AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.100"
-    ,gw:"192.168.4.100",dhcp_start:"192.168.4.101",dhcp_end:"192.168.4.149"};
+    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.60"
+    ,gw:"192.168.4.60",dhcp_start:"192.168.4.61",dhcp_end:"192.168.4.79"};
    
  }else if(DEVICE_NO==="4")
  {
    // IOT2 esp8266 led good
 
    AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.100"
-    ,gw:"192.168.4.100",dhcp_start:"192.168.4.101",dhcp_end:"192.168.4.149"};
+    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.80"
+    ,gw:"192.168.4.80",dhcp_start:"192.168.4.81",dhcp_end:"192.168.4.99"};
    
  } 
  else{
   AP={
-    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.150"
+    ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168.4.100"
     ,gw:"192.168.4.1",dhcp_start:"192.168.4.151",dhcp_end:"192.168.4.199"}
  }
 print('==========',DEVICE_NAME,"=========");
