@@ -293,7 +293,7 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
   
     let mode=Cfg.get("upd_reset_count"); 
     print("Still Disconnected ",diconnect_count); 
-    if(diconnect_count>=2 && !(mode===MODE_CENTRALIZED))
+    if(diconnect_count>=2  )
     {
       diconnect_count=0; 
       if(iotains[index]===DEVICE_NAME || iotains[index]===Cfg.get("wifi.sta.ssid"))
@@ -311,18 +311,15 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
       wifi_setup();
 
 
-    }
-    else if(mode===MODE_CENTRALIZED){
-      print("Disconnedcted From Centralizd Server ",DEF_WIFI_SSID);
-    }
+    } 
   } else if (ev === Net.STATUS_CONNECTING) {
     evs = 'CONNECTING';
   } else if (ev === Net.STATUS_CONNECTED) {
-    diconnect_count=0;
     led_on();
     evs = 'CONNECTED';
   } else if (ev === Net.STATUS_GOT_IP) {
     evs = 'GOT_IP';
+    diconnect_count=0;
     stop_blink();
     led_on();
 
