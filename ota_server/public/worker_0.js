@@ -6,10 +6,13 @@ load('api_events.js');
 load('api_rpc.js'); 
 load('api_file.js'); 
 load('api_gpio.js'); 
-
+ 
 let DEVICE_NO="2";
 let DEVICE_NAME="iotain_"+DEVICE_NO;
-
+let MODE_CENTRALIZED=0;
+let MODE_DECENTRALIZED=1;
+let DEF_WIFI_SSID="Swati_Niwas";
+let DEF_WIFI_PASS="mother1919";
 let led =5;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
 
 let s = read_data('updater_data.json');
@@ -75,13 +78,14 @@ if(s.status==="TO_COMMIT")
   Cfg.set({wifi:{ap:AP}});
   Cfg.set({device:{id:DEVICE_NAME}});
 
+  Cfg.set({upd_reset_count:MODE_DECENTRALIZED});
   if(iotains[0]===DEVICE_NAME)
   {
-    Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true},sta_connect_timeout:10}}); 
+    Cfg.set({wifi:{sta:{ssid:DEF_WIFI_SSID,pass:DEF_WIFI_PASS,enable:true},sta_connect_timeout:(10)}}); 
   }
   else{
 
-    Cfg.set({wifi:{sta:{ssid:iotains[0],pass:"password",enable:true},sta_connect_timeout:10}}); 
+    Cfg.set({wifi:{sta:{ssid:iotains[0],pass:"password",enable:true},sta_connect_timeout:(10) }}); 
   }
   
 
@@ -156,13 +160,31 @@ let stop_blink=function()
 
  */
 
-let status={ap:AP,sta_ip:"0.0.0.0"};
+let status={ap:AP,sta_ip:"0.0.0.0",sta_ssid:"",clients:[]};
 
 let get_status=function()
 {
-
+    status.sta_ssid=Cfg.get("wifi.sta.ssid");
+    status.clients=clients;
+    status.mode=Cfg.get("upd_reset_count"); ;
     return {status:status};
 
+};
+
+let register=function(host,sta_ip)
+{
+
+  print("register: calling ",host," my ip ",sta_ip);
+  HTTP.query({
+    url: host+"/rpc/register", 
+    data: {ssid: DEVICE_NAME, ip: sta_ip}, 
+		success: function(body, full_http_msg) {
+			print(body); 
+		},
+		error: function( s ) { print(s); },  
+  }); 
+  
+  
 };
 
 /*******************RPC*****************/
@@ -170,6 +192,22 @@ let get_status=function()
 RPC.addHandler('status',function(args){
   
   return get_status();
+
+});
+let clients=[];
+RPC.addHandler('register',function(args)
+{
+
+  for(let i=0;i<clients.length;i++)
+  {
+    if(clients[i].ssid===args.ssid)
+    {
+      clients[i].ip=args.ip;
+      return {status:"Already Registered"};
+    }
+  }
+  clients.push({ssid:args.ssid,ip:args.ip});
+  return {status:"Registered"};
 
 });
 
@@ -197,6 +235,22 @@ RPC.addHandler('blink',function(args){
 
 });  
 
+RPC.addHandler('set_mode',function(args){
+ 
+  if(args.mode==="central")
+  {
+    Cfg.set({upd_reset_count:MODE_CENTRALIZED});
+    Cfg.set({wifi:{sta:{ssid:DEF_WIFI_SSID,pass:DEF_WIFI_PASS,enable:true},sta_connect_timeout:(10)}}); 
+    wifi_setup();
+  }
+  else{
+
+    Cfg.set({upd_reset_count:MODE_DECENTRALIZED});
+
+  }
+  return {result:"Set set_conn_mode",mode:Cfg.get("upd_reset_count")};
+
+});
 let ar=[];
 RPC.addHandler('wifi',function(args){
  
@@ -237,17 +291,18 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
     status.sta_ip="0.0.0.0";
     diconnect_count++;
   
-    print("Still Disconnected ",diconnect_count);
-    if(diconnect_count===2)
+    let mode=Cfg.get("upd_reset_count"); 
+    print("Still Disconnected ",diconnect_count); 
+    if(diconnect_count>=2 && !(mode===MODE_CENTRALIZED))
     {
       diconnect_count=0; 
       if(iotains[index]===DEVICE_NAME || iotains[index]===Cfg.get("wifi.sta.ssid"))
       {
         index++;
-        if(iotains[index]===DEVICE_NAME || iotains[index]===Cfg.get("wifi.sta.ssid"))
+        /*if(iotains[index]===DEVICE_NAME || iotains[index]===Cfg.get("wifi.sta.ssid"))
         {
           index++;
-        }
+        }*/
       }
       if(index===iotains.length)
         index=0;
@@ -256,6 +311,9 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
       wifi_setup();
 
 
+    }
+    else if(mode===MODE_CENTRALIZED){
+      print("Disconnedcted From Centralizd Server ",DEF_WIFI_SSID);
     }
   } else if (ev === Net.STATUS_CONNECTING) {
     evs = 'CONNECTING';
@@ -271,7 +329,9 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
       RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) {
        
         status.sta_ip = resp.wifi.sta_ip;
-
+        let mode=Cfg.get("upd_reset_count"); 
+        
+        register("192.168."+JSON.stringify(index)+".1",status.sta_ip);
       }, null); 
 
   }
