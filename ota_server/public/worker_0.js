@@ -202,6 +202,7 @@ let get_info=function()
   RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) {
        
     status.sta_ip = resp.wifi.sta_ip;
+    myIp=status.sta_ip;
     let mode=Cfg.get("upd_reset_count"); 
    
     register( "192.168."+status.sta_ip.slice(8, 9)+".1", status.sta_ip );
@@ -210,6 +211,191 @@ let get_info=function()
   }, null); 
 
 };
+
+
+
+ 
+let myIp="127.0.0.1:8080";
+let http_call=function(url,body,cb)
+{
+   print("HTTP CALL ",url,JSON.stringify(body));
+
+   HTTP.query({
+    url: url,
+    data:body,
+		success: function(body, full_http_msg) {
+			print(body);  
+		},
+		error: function( s ) { print(s); },  // Optional
+	}); 
+    
+
+};
+let resources=[{"res_name":"diring room led","res_id":19912},{"res_name":"diring room led","res_id":19935},{"res_name":"diring room led","res_id":1957}];
+let find_resource=function(res_id)
+{
+
+    for(let i=0;i<resources.length;i++)
+    {
+        if(resources[i].res_id===res_id)
+        {
+            return resources[i];
+        }
+    }
+    return undefined;
+
+};
+let perform_job=function(job)
+{
+    print("Performing ",job.res_name);
+    return {message:"Job DOne Brow!!!",val:1.2};
+
+};
+
+
+
+let requests=[];
+let find_request=function(req_id)
+{
+    
+    for(let i=0;i<requests.length;i++)
+    {
+       // print("REQ ID ",requests[i].req_id," in ",req_id);;
+        if(requests[i].req_id===req_id)
+        {
+            return requests[i];
+        }
+    }
+    return undefined;
+
+
+};
+let update_request=function(req)
+{
+    for(let i=0;i<requests.length;i++)
+    {
+      //  print("REQ ID ",requests[i].req_id," in ",req.req_id);;
+        if(requests[i].req_id===req.req_id)
+        {
+            requests[i].status=req.status;
+            return requests[i];
+        }
+    }
+};
+
+let fwd_request=function(req)
+{
+    let _req={
+        req_id:req.req_id,
+        force_fwd:req.force_fwd,
+        src_ip:myIp,
+        status:req.status,
+        job:req.job
+    }; 
+    print("FWD RQ FROM:",req.src_ip," JOB:",req.job.res_name," TO:", JSON.stringify(clients));
+    // to /on_request of all clients
+   // print(JSON.stringify(requests));
+    for(let i=0;i<clients.length;i++)
+    {
+        http_call("http://"+clients[i]+"/rpc/on_request",_req,function(body){
+            print("Forwarded");
+            //print("RES ",JSON.stringify(body));
+        })
+    }
+    return {"forwarded_to":clients};
+};
+let add_request=function(req)
+{
+    requests.push(req); 
+    return fwd_request(req);
+};
+
+
+//req_id,src_ip,src_name,job,status
+let on_request=function(req)
+{ 
+ 
+    if(req.req_id===undefined)
+    {
+        return {result:"req_id is not defined"};
+    }
+    if(req.job===undefined)
+    {
+        return {result:"job is not defined"};
+    }
+
+    let res=find_resource(req.job.res_id);
+    if(res===undefined)
+    {
+        let req_hist=find_request(req.req_id);
+        if(req_hist!==undefined)
+        {
+            if(req.force_fwd!==undefined)
+            {
+                fwd_request(req);
+                return {result:clients,status:"forwarding request"};
+            }
+            return {result:req_hist.status,status:"request already recieved"};
+
+        }
+        else{
+            
+            return {result:add_request(req),status:"forwarding request"};
+
+        }
+    }
+    else{
+        let respo=perform_job(req.job);
+        req.status=respo;
+        requests.push(req);
+        http_call("http://"+req.src_ip+"/rpc/on_callback",req,function(body){
+            print("JOB performed and Response Reverted to ",req.src_ip);
+            //print("RES ",JSON.stringify(body));
+        })
+        return  {result:respo,status:"performing job"};
+    }
+   
+  
+    
+    return {response:null,status:"fwd_request"};
+};
+
+let rev_request=function(req)
+{
+
+
+    let rq=update_request(req);
+    
+    print("FWD RES TO:",rq.src_ip," JOB:",rq.job.res_name);
+    // to /on_callback of the requester neighbour
+    
+        http_call("http://"+rq.src_ip+"/rpc/on_callback",rq,function(body){
+            print("JOB performed and Response Reverted to ",rq.src_ip);
+            // print("RES ",JSON.stringify(body));
+        })
+   
+    return {"reverted_to":(rq.src_ip)};
+
+};
+let on_callback=function(req)
+{
+    if(req.req_id===undefined)
+    {
+        return {result:"req_id is not defined"};
+    }
+
+    let req_hist=find_request(req.req_id);
+    if(req_hist===undefined)
+    {
+        return {result:"FATAL:ERR: request not found on this node"};
+    }
+    return {result:rev_request(req),status:"Response reverted"};
+
+
+
+
+};
+ 
 /*******************RPC*****************/
 
 /********UNIT TESTING*********/
