@@ -5,10 +5,18 @@ load('api_http.js');
 load('api_events.js'); 
 load('api_rpc.js'); 
 load('api_file.js'); 
-load('api_gpio.js'); 
- 
-let DEVICE_NO="0";
-let DEVICE_NAME="iotain_"+DEVICE_NO;
+load('api_gpio.js');  
+
+let DEVICE_NAME=Cfg.get("device.id");  
+let DEVICE_NO=DEVICE_NAME.slice(7, 8);
+let DEVICE_NO_INT=JSON.parse(DEVICE_NO);
+if(DEVICE_NAME==="iotain_0")
+{
+  DEVICE_NO="0";
+  DEVICE_NAME="iotain_"+DEVICE_NO;
+  Cfg.set({device:{id:DEVICE_NAME}});
+}
+
 let MODE_CENTRALIZED=0;
 let MODE_DECENTRALIZED=1;
 let DEF_WIFI_SSID="Swati_Niwas";
