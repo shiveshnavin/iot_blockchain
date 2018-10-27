@@ -102,11 +102,47 @@ done:
 bool change_wifi()
 {
  
-	return mgos_wifi_setup((struct mgos_config_wifi *) mgos_sys_config_get_wifi());
+  return mgos_wifi_setup((struct mgos_config_wifi *) mgos_sys_config_get_wifi());
 
 }
  
 
+
+static int blink_led=5;
+mgos_timer_id led_timer=-1;
+static int DELAY=100;
+void init_led(int pin,int delay)
+{
+blink_led=pin; 
+DELAY=delay;
+mgos_gpio_set_mode(pin, MGOS_GPIO_MODE_OUTPUT);
+}
+
+void blink_once(int pin)
+{
+  mgos_gpio_write(pin,1);
+  mgos_msleep(500);
+  mgos_gpio_write(pin,0);
+  mgos_msleep(500);
+  mgos_gpio_write(pin,1);
+  mgos_msleep(500);
+  mgos_gpio_write(pin,0); 
+}
+
+static void led_timer_cb(void *arg) {
+   mgos_gpio_toggle(blink_led);
+  (void) arg;
+}
+void start_blink()
+{
+ led_timer=mgos_set_timer(DELAY, MGOS_TIMER_REPEAT, led_timer_cb, NULL);
+}
+void stop_blink()
+{
+ 
+ mgos_clear_timer(led_timer);
+
+}
 enum mgos_app_init_result mgos_app_init(void) {
 
   mg_rpc_add_handler(mgos_rpc_get_global(), "Fetch",
