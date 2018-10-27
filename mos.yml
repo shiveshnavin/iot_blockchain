@@ -12,7 +12,8 @@ sources:
 config_schema:
   - ["mqtt.server", "iot.eclipse.org:1883"]
   - ["i2c.enable", true]
-  - ["device.id", "s", "iotain_??????",{title: "Device ID"}]
+  - ["device.id", "s", "iotain_0",{title: "Device ID"}]
+  - ["device.no", "i", 0,{title: "Device No"}]
   - ["device.firmware_version", "s", "10",{title: "Device SW Version"}]
   - ["device.firmware_version_previous", "s", "10",{title: "Device SW Version Last Working"}]
   - ["device.hardware_version", "s", "10",{title: "Device HW Version"}]

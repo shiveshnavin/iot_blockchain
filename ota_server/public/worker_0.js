@@ -94,6 +94,7 @@ if(s.status==="TO_COMMIT")
   else{
 
     Cfg.set({wifi:{sta:{ssid:iotains[0],pass:"password",enable:true},sta_connect_timeout:(10) }}); 
+     
   }
   
 
@@ -179,6 +180,7 @@ let get_status=function()
 
 };
 
+let reg_timer=-1;
 let register=function(host,sta_ip)
 {
 
@@ -194,31 +196,23 @@ let register=function(host,sta_ip)
   
   
 };
-
-/*******************RPC*****************/
-
-RPC.addHandler('status',function(args){
-  
-  return get_status();
-
-});
-let clients=[];
-RPC.addHandler('register',function(args)
+let get_info=function()
 {
 
-  for(let i=0;i<clients.length;i++)
-  {
-    if(clients[i].ssid===args.ssid)
-    {
-      clients[i].ip=args.ip;
-      return {status:"Already Registered"};
-    }
-  }
-  clients.push({ssid:args.ssid,ip:args.ip});
-  return {status:"Registered"};
+  RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) {
+       
+    status.sta_ip = resp.wifi.sta_ip;
+    let mode=Cfg.get("upd_reset_count"); 
+   
+    register( "192.168."+status.sta_ip.slice(8, 9)+".1", status.sta_ip );
+   
+    
+  }, null); 
+  
+};
+/*******************RPC*****************/
 
-});
-
+/********UNIT TESTING*********/
 RPC.addHandler('blink',function(args){
 
   if(args===undefined)
@@ -273,6 +267,35 @@ RPC.addHandler('wifi_scan',function(args){
   return {result:"Scanning..."};
 
 });
+
+
+/******** --- UNIT TESTING*********/
+
+
+RPC.addHandler('status',function(args){
+  
+  return get_status();
+
+});
+
+let clients=[];
+RPC.addHandler('register',function(args)
+{
+
+  for(let i=0;i<clients.length;i++)
+  {
+    if(clients[i].ssid===args.ssid)
+    {
+      clients[i].ip=args.ip;
+      return {status:"Already Registered"};
+    }
+  }
+  clients.push({ssid:args.ssid,ip:args.ip});
+  return {status:"Registered"};
+
+});
+
+
 RPC.addHandler('callback',function(args){
 
   print("callback on "+DEVICE_NAME);
@@ -288,12 +311,22 @@ RPC.addHandler('request',function(args){
 
 });
 
-let index=0;
+
+/***********--- RPC ***********/
+
+
+let index=DEVICE_NO_INT+1;
 start_blink();
 let diconnect_count=0;
 Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
   let evs = '???';
   if (ev === Net.STATUS_DISCONNECTED) {
+
+    if(reg_timer===-1)
+    {
+      Timer.del(reg_timer);
+    }
+    
     start_blink();
     evs = 'DISCONNECTED';
     status.sta_ip="0.0.0.0";
@@ -330,14 +363,19 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
     diconnect_count=0;
     stop_blink();
     led_on();
+    if(reg_timer===-1)
+    {
+      Timer.del(reg_timer);
+    }
+    reg_timer=Timer.set(5000,Timer.REPEAT,function(args){
 
-      RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) {
-       
-        status.sta_ip = resp.wifi.sta_ip;
-        let mode=Cfg.get("upd_reset_count"); 
-        
-        register("192.168."+JSON.stringify(index)+".1",status.sta_ip);
-      }, null); 
+
+      
+      get_info();
+
+
+    },null);
+    
 
   }
   print('== Net event:', ev, evs);
