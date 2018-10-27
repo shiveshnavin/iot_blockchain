@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 app.engine('hbs',hbs({
     extname:"hbs"
 }))
-var PORT=8080
+var PORT=8083
 var API_KEY="aezakmi";
 var HOST="http://54.227.87.51:"+PORT
 /*
@@ -242,8 +242,8 @@ let print=function()
 /**************** --MJS *****************/ 
 
 
-let clients=["127.0.0.1:8082"];
-let myIp="127.0.0.1:8080";
+let clients=["127.0.0.1:8080"];
+let myIp="127.0.0.1:8083";
 let http_call=function(url,body,cb)
 {
     print("HTTP CALL ",url,JSON.stringify(body));
@@ -256,7 +256,7 @@ let http_call=function(url,body,cb)
     );
 
 };
-let resources=[{"res_name":"diring room led","res_id":19912},{"res_name":"diring room led","res_id":19935},{"res_name":"diring room led","res_id":1957}];
+let resources=[{"res_name":"diring room led","res_id":199120},{"res_name":"diring room led","res_id":19935},{"res_name":"diring room led","res_id":1957}];
 let find_resource=function(res_id)
 {
 

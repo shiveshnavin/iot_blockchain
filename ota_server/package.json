@@ -28,6 +28,7 @@
     "file": "^0.2.2",
     "formidable": "^1.2.1",
     "path": "^0.12.7",
-    "public-ip": "^2.4.0"
+    "public-ip": "^2.4.0",
+    "request": "^2.88.0"
   }
 }

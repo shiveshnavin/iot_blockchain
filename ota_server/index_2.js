@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 app.engine('hbs',hbs({
     extname:"hbs"
 }))
-var PORT=8080
+var PORT=8082
 var API_KEY="aezakmi";
 var HOST="http://54.227.87.51:"+PORT
 /*
@@ -242,8 +242,8 @@ let print=function()
 /**************** --MJS *****************/ 
 
 
-let clients=["127.0.0.1:8082"];
-let myIp="127.0.0.1:8080";
+let clients=["127.0.0.1:8083"];
+let myIp="127.0.0.1:8082";
 let http_call=function(url,body,cb)
 {
     print("HTTP CALL ",url,JSON.stringify(body));
@@ -384,7 +384,6 @@ let on_request=function(req)
 
 let rev_request=function(req)
 {
-
 
     let rq=update_request(req);
     print("Forwarding Response to ","\n-->", (rq.src_ip));
