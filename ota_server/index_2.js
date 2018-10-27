@@ -246,7 +246,7 @@ let clients=["127.0.0.1:8083"];
 let myIp="127.0.0.1:8082";
 let http_call=function(url,body,cb)
 {
-    print("HTTP CALL ",url,JSON.stringify(body));
+    //print("HTTP CALL ",url,JSON.stringify(body));
     request.post(
         url,
         { json: body },
@@ -273,7 +273,7 @@ let find_resource=function(res_id)
 let perform_job=function(job)
 {
     print("Performing ",job.res_name);
-    return job;
+    return {message:"Job DOne Brow!!!",val:1.2};
 
 };
 
@@ -299,7 +299,7 @@ let update_request=function(req)
 {
     for(let i=0;i<requests.length;i++)
     {
-        print("REQ ID ",requests[i].req_id," in ",req.req_id);;
+       // print("REQ ID ",requests[i].req_id," in ",req.req_id);;
         if(requests[i].req_id===req.req_id)
         {
             requests[i].status=req.status;
@@ -312,17 +312,19 @@ let fwd_request=function(req)
 {
     let _req={
         req_id:req.req_id,
+        force_fwd:req.force_fwd,
         src_ip:myIp,
         status:req.status,
         job:req.job
     }; 
-    print("Forwarding Request","\n-->", JSON.stringify(_req));
+    print("FWD RQ FROM:",req.src_ip," JOB:",req.job.res_name," TO:", JSON.stringify(clients));
     // to /on_request of all clients
    // print(JSON.stringify(requests));
     for(let i=0;i<clients.length;i++)
     {
         http_call("http://"+clients[i]+"/rpc/on_request",_req,function(body){
-            print("RES ",JSON.stringify(body));
+            print("Forwarded");
+            //print("RES ",JSON.stringify(body));
         })
     }
     return {"forwarded_to":clients};
@@ -372,7 +374,8 @@ let on_request=function(req)
         req.status=respo;
         requests.push(req);
         http_call("http://"+req.src_ip+"/rpc/on_callback",req,function(body){
-            print("RES ",JSON.stringify(body));
+            print("JOB performed and Response Reverted to ",req.src_ip);
+            //print("RES ",JSON.stringify(body));
         })
         return  {result:respo,status:"performing job"};
     }
@@ -385,12 +388,15 @@ let on_request=function(req)
 let rev_request=function(req)
 {
 
+
     let rq=update_request(req);
-    print("Forwarding Response to ","\n-->", (rq.src_ip));
+    
+    print("FWD RES TO:",rq.src_ip," JOB:",rq.job.res_name);
     // to /on_callback of the requester neighbour
     
         http_call("http://"+rq.src_ip+"/rpc/on_callback",rq,function(body){
-            print("RES ",JSON.stringify(body));
+            print("JOB performed and Response Reverted to ",rq.src_ip);
+            // print("RES ",JSON.stringify(body));
         })
    
     return {"reverted_to":(rq.src_ip)};
