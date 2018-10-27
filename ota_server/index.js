@@ -289,23 +289,7 @@ let on_request=function(req)
 };
 
 
-
-let function_chutiyap=function(nice)
-{
-
-let c=nice.a-nice.b;
-
-
-if(nice.sign==='-')
-{
-	print(c);
-}
-else
-{
-	print("Not found");
-}
-
-};
+ 
 
 
 

@@ -12,7 +12,7 @@ let DEVICE_NO=DEVICE_NAME.slice(7, 8);
 let DEVICE_NO_INT=JSON.parse(DEVICE_NO);
 if(DEVICE_NAME==="iotain_0")
 {
-  DEVICE_NO="0";
+  DEVICE_NO="2";
   DEVICE_NAME="iotain_"+DEVICE_NO;
   Cfg.set({device:{id:DEVICE_NAME}});
 }
@@ -21,7 +21,7 @@ let MODE_CENTRALIZED=0;
 let MODE_DECENTRALIZED=1;
 let DEF_WIFI_SSID="Swati_Niwas";
 let DEF_WIFI_PASS="mother1919";
-let led =2;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
+let led =5;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
 
 let s = read_data('updater_data.json');
 let read_data=function(file){
@@ -208,7 +208,7 @@ let get_info=function()
    
     
   }, null); 
-  
+
 };
 /*******************RPC*****************/
 
@@ -362,7 +362,7 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
     evs = 'GOT_IP';
     diconnect_count=0;
     stop_blink();
-    led_on();
+    led_on(); 
     if(reg_timer===-1)
     {
       Timer.del(reg_timer);
