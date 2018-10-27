@@ -109,8 +109,9 @@ bool change_wifi()
 
 
 static int blink_led=5;
-mgos_timer_id led_timer=-1;
+mgos_timer_id led_timer=1911;
 static int DELAY=100;
+static bool inhibit_timer=false;
 void init_led(int pin,int delay)
 {
 blink_led=pin; 
@@ -128,20 +129,32 @@ void blink_once(int pin)
   mgos_msleep(500);
   mgos_gpio_write(pin,0); 
 }
-
 static void led_timer_cb(void *arg) {
+
+  if(inhibit_timer)
+    return;
    mgos_gpio_toggle(blink_led);
   (void) arg;
 }
-void start_blink()
-{
- led_timer=mgos_set_timer(DELAY, MGOS_TIMER_REPEAT, led_timer_cb, NULL);
-}
+
 void stop_blink()
 {
- 
+ inhibit_timer=true;
  mgos_clear_timer(led_timer);
-
+  mgos_msleep(DELAY);
+led_timer=-1;
+inhibit_timer=false;
+}
+void start_blink()
+{
+  inhibit_timer=true;
+	if(led_timer!=(unsigned)(1911))
+	{
+	 stop_blink();
+	}
+  led_timer=mgos_set_timer(DELAY, MGOS_TIMER_REPEAT, led_timer_cb, NULL);
+  mgos_msleep(DELAY);
+  inhibit_timer=false;
 }
 enum mgos_app_init_result mgos_app_init(void) {
 

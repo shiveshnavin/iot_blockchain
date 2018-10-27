@@ -11,7 +11,7 @@ let DEVICE_NAME=Cfg.get("device.id");
 let DEVICE_NO=DEVICE_NAME.slice(7, 8); 
 if(DEVICE_NAME==="iotain_0")
 {
-  DEVICE_NO="0";
+  DEVICE_NO="3";
   DEVICE_NAME="iotain_"+DEVICE_NO;
   Cfg.set({device:{id:DEVICE_NAME}});
 }   
@@ -83,17 +83,7 @@ let reg_timer=-1;
 let register=function(host,sta_ip)
 {
   print("register: calling ",host," my ip ",sta_ip);
-  http_call(host+"/rpc/register",{ssid: DEVICE_NAME, ip: sta_ip},function(body) {
-    print(body); 
-    if(body!==undefined && body.indexOf("Already")>-1)
-    {
-      if(reg_timer!==-1)
-      {
-        Timer.del(reg_timer);
-        reg_timer=-1;
-      }
-    }
-  }); 
+  http_call(host+"/rpc/register",{ssid: DEVICE_NAME, ip: sta_ip}); 
 };
 let get_info=function()
 {
@@ -105,7 +95,7 @@ let get_info=function()
 gc(true);
 let clients=[]; 
 let myHostIp="192.168."+DEVICE_NO+".1";
-let http_call=function(url,body,cb)
+let http_call=function(url,body)
 {
    print("HTTP CALL ",url,JSON.stringify(body));
 
@@ -113,14 +103,22 @@ let http_call=function(url,body,cb)
     url: url,
     data:body,
 		success: function(body, full_http_msg) {
-      print(body);  
-      cb(body);
+      print(body); 
+      if(body!==undefined && body.indexOf("Already")>-1)
+      {
+        if(reg_timer!==-1)
+        {
+          Timer.del(reg_timer);
+          reg_timer=-1;
+        }
+      } 
+      
 		},
 		error: function( s ) { print(s); },   
 	}); 
     
 };
-let resources=[{"res_name":"diring room led","res_id":19912},{"res_name":"diring room led","res_id":19935},{"res_name":"diring room led","res_id":1957}];
+let resources=[{"res_name":"diring room led","res_id":3},{"res_name":"diring room led","res_id":19935},{"res_name":"diring room led","res_id":1957}];
 let find_resource=function(res_id)
 {
  
@@ -178,7 +176,7 @@ let fwd_request=function(req)
     print("FWD RQ FROM:",req.src_ip," JOB:",req.job.res_name," TO:", JSON.stringify(clients)); 
     for(let i=0;i<clients.length;i++)
     {
-        http_call("http://"+clients[i]+"/rpc/on_request",_req);
+        http_call("http://"+JSON.stringify(clients[i])+"/rpc/on_request",_req);
     }
     return {"forwarded_to":clients}; 
 };
