@@ -7,13 +7,13 @@ load('api_rpc.js');
 load('api_file.js'); 
 load('api_gpio.js'); 
  
-let DEVICE_NO="2";
+let DEVICE_NO="0";
 let DEVICE_NAME="iotain_"+DEVICE_NO;
 let MODE_CENTRALIZED=0;
 let MODE_DECENTRALIZED=1;
 let DEF_WIFI_SSID="Swati_Niwas";
 let DEF_WIFI_PASS="mother1919";
-let led =5;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
+let led =2;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number  
 
 let s = read_data('updater_data.json');
 let read_data=function(file){
