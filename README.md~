@@ -327,13 +327,15 @@ Again tested with some modifications , now src_ip is either AP Host ip or Sta io
 
 PASS (yayy!!)
 
-#### Test Case 4 : when request is made to node with common host as that or resource holder
+#### Test Case 4 : when request is made to node with common host as that of resource holder
 PASS
 
 #### Test Case 5 : when request is made to node which is 2 nodes far from the resource holder
 PASS (Yayyyyyyy!!!)
 
 Sill empty response reverted though
+>> Update
+Empty Response fixed , turns out HTTP headers were wrong and now set to application/json Content-type , its working now!! 
 
 ## TODO
 

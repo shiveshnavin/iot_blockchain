@@ -334,6 +334,8 @@ PASS
 PASS (Yayyyyyyy!!!)
 
 Sill empty response reverted though
+>> Update
+Empty Response fixed , turns out HTTP headers were wrong and now set to application/json Content-type , its working now!! 
 
 ## TODO
 
