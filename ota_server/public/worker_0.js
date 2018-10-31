@@ -115,6 +115,7 @@ let http_call=function(url,body)
 
    HTTP.query({
     url: url,
+    headers: { 'Content-Type': 'application/json' },   
     data:body,
 		success: function(body, full_http_msg) {
       print(DEVICE_NAME,body);       
@@ -228,6 +229,7 @@ let rev_request=function(req)
 { 
    let rq=update_request(req); 
     print(DEVICE_NAME,"FWD RES TO:",rq.src_ip," JOB:",rq.job.res_name);
+    rq.status=req.status;
          http_call("http://"+rq.src_ip+"/rpc/on_callback",rq);
    
     return {"reverted_to":(rq.src_ip)}; 
@@ -347,7 +349,14 @@ let upd_commit=function()
     File.write(JSON.stringify(s),"updater_data.json");
 
 };
-  
+
+RPC.addHandler('ping',function(args){
+
+  http_call(args.url,{ping:"on"});
+  return {ping:true};
+});
+
+
 if(s.status==="TO_COMMIT")
 { 
   upd_commit();
