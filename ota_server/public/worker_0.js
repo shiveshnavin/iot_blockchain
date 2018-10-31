@@ -81,6 +81,7 @@ let get_status=function()
     status.clients=clients;
     status.myHostIp=myHostIp;
     status.resources=resources;
+    status.requests=requests;
     status.mode=Cfg.get("upd_reset_count"); ;
     status.name=DEVICE_NAME;
     return {status:status};
@@ -204,6 +205,7 @@ let on_request=function(req)
                 fwd_request(req);
                 return {result:clients,status:"forwarding request"};
             }
+            print("Already Recieved ",req.req_id );
             return {result:req_hist.status,status:"request already recieved"}; 
         }
         else{
@@ -263,13 +265,13 @@ RPC.addHandler('register',function(args)
 });  
 RPC.addHandler('on_callback',function(args){
 
-  print(DEVICE_NAME,"callback on "+DEVICE_NAME);
+  print(DEVICE_NAME,"callback on "+DEVICE_NAME, " ID ",args.req_id);
   return on_callback(args);
 
 });  
 RPC.addHandler('on_request',function(args){
 
-  print(DEVICE_NAME,"request on "+DEVICE_NAME);
+  print(DEVICE_NAME,"request on "+DEVICE_NAME, " ID ",args.req_id);
   return on_request(args);
 
 }); 

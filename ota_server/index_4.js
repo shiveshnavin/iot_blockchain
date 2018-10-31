@@ -436,7 +436,7 @@ app.post("/rpc/on_request",function(req,res){
  app.post("/rpc/on_callback",function(req,res){
 
     
-    print("YOOO ",JSON.stringify(req.body));
-    res.send( {});
+    print("YOOO ",JSON.stringify(req));
+    res.send( {"OK":"Got it bruh !"});
    
   })

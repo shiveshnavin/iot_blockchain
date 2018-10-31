@@ -323,6 +323,17 @@ NO LOG ABOUT THE CALLBACK MADE , reason being call should have been made tp http
 
 FAIL
 
+Again tested with some modifications , now src_ip is either AP Host ip or Sta io depending on the endpoint where requests is being forwarded to
+
+PASS (yayy!!)
+
+#### Test Case 4 : when request is made to node with common host as that of resource holder
+PASS
+
+#### Test Case 5 : when request is made to node which is 2 nodes far from the resource holder
+PASS (Yayyyyyyy!!!)
+
+Sill empty response reverted though
 
 ## TODO
 
