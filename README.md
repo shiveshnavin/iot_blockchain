@@ -165,6 +165,165 @@ Val = 3 : trigger start_blink()
 
 PASS
 
+
+### Test 3 : Testing Intercom functions
+
+#### Test Case 1 : When resource are availabe on same device on which call is made
+
+Request to 192.168.0.1 
+```javascript
+{
+	
+	"req_id":"Ef23zvzA",
+	"src_ip":"192.168.0.6:8084",
+	"status":{"message":"under process"},
+	"job":{"res_id":1,"res_name":"Ultrasound sensor","action":"read"}
+	
+}
+
+```
+
+RESPONSE
+```javascript
+{
+    "status": "performing job",
+    "result": {
+        "val": 1.2,
+        "message": "Job DOne Brow!!!"
+    }
+}
+````
+
+#### Test Case 2 : When recource not availale anywhere
+
+Request to 192.168.0.2
+```js
+{
+	
+	"req_id":"Ef23zvzA",
+	"src_ip":"192.168.0.6:8084",
+	"status":{"message":"under process"},
+	"job":{"res_id":601,"res_name":"Ultrasound sensor","action":"read"}
+	
+}
+```
+
+Response on requester
+```js
+{
+    "status": "forwarding request",
+    "result": {
+        "forwarded_to": [
+            {
+                "ip": "192.168.0.3",
+                "ssid": "iotain_3"
+            },
+            {
+                "ip": "192.168.0.2",
+                "ssid": "iotain_2"
+            },
+            {
+                "ip": "192.168.0.4",
+                "ssid": "iotain_1"
+            }
+        ]
+    }
+}
+
+host 192.168.0.1 forwards requets to
+```js
+ [{"ip":"192.168.0.3","ssid":"iotain_3"},{"ip":"192.168.0.2","ssid":"iotain_2"},{"ip":"192.168.0.4","ssid":"iotain_1"}] 
+
+```
+host gets responsees
+```js
+[Oct 31 11:50:34.782] iotain_0 {"status":"forwarding request","result":{"forwarded_to":[]}}\x0d\x0a 
+[Oct 31 11:50:34.838] iotain_0 {"status":"forwarding request","result":{"forwarded_to":[]}}\x0d\x0a 
+[Oct 31 11:50:35.059] iotain_0 {"status":"forwarding request","result":{"forwarded_to":[{"ip":"192.168.1.3","ssid":"iotain_0"}]}}\x0d\x0a 
+
+```
+
+on 192.168.1.1 we get request from iotain_0 and since iotain_0 <--> iotain_1 so
+on iotain_0 we get requst from iotain_1
+on iotain_1
+```js
+[Oct 31 11:50:34.720] iotain_1 FWD RQ FROM: 192.168.1.1  JOB: Ultrasound sensor  TO: [{"ip":"192.168.1.3","ssid":"iotain_0"}] 
+[Oct 31 11:50:34.771] iotain_1 HTTP CALL  http://192.168.1.3/rpc/on_request {"job":{"res_id":601,"res_name":"Ultrasound sensor","action":"read"},"status":{"message":"under process"},"src_ip":"192.168.0.1","req_id":"Ef23zvzA"} 
+[Oct 31 11:50:35.371] iotain_1 {"status":"request already recieved","result":{"message":"under process"}}\x0d\x0a 
+
+```
+again on iotain_0
+```js
+[Oct 31 11:50:35.118] mg_rpc_handle_reques on_request via HTTP 192.168.1.1:53469
+[Oct 31 11:50:35.127] iotain_0 request on iotain_0 
+
+```
+since request is alredy recieved earlier at iotain_0 hence the request from iotain_1 is discarded
+
+PASS
+
+#### Test Case 3 : When recource is on next device to which request is made , i.e. making req to host to which both the requester and the actual resourced device is conncted to
+
+request from requester 192.168.0.6:8084 to host iotain_0
+```js
+{
+	
+	"req_id":"ABCS",
+	"src_ip":"192.168.0.6:8084",
+	"status":{"message":"under process"},
+	"job":{"res_id":31,"res_name":"Ultrasound sensor","action":"read"}
+	
+}
+```
+
+response from iotain_0
+```js
+{
+    "status": "forwarding request",
+    "result": {
+        "forwarded_to": [
+            {
+                "ip": "192.168.0.3",
+                "ssid": "iotain_3"
+            },
+            {
+                "ip": "192.168.0.2",
+                "ssid": "iotain_2"
+            },
+            {
+                "ip": "192.168.0.4",
+                "ssid": "iotain_1"
+            }
+        ]
+    }
+}
+
+```
+response is
+```code
+[Oct 31 12:01:36.205] iotain_0 {"status":"performing job","result":{"val":1.200000,"message":"Job DOne Brow!!!"}}\x0d\x0a 
+
+```
+
+request received on iotain_1 and log on iotain_1 is
+```code
+[Oct 31 12:01:35.811] iotain_1 request on iotain_1 
+[Oct 31 12:01:35.864] iotain_1 Performing  Ultrasound sensor 
+[Oct 31 12:01:35.920] iotain_1 HTTP CALL  http://192.168.1.1/rpc/on_callback {"req_id":"ABCS","src_ip":"192.168.1.1","status":{"val":1.200000,"message":"Job DOne Brow!!!"},"job":{"res_id":31,"res_name":"Ultrasound sensor","action":"read"}} 
+[Oct 31 12:01:42.174] iotain_1  
+
+```
+means iotain_1 finds the resource and does the job and makes callback on iotain_0 with response
+log on iotain_0 is
+```code
+
+NO LOG ABOUT THE CALLBACK MADE , reason being call should have been made tp http://192.168.0.1 and not http://192.168.1.1 .
+ 
+```
+
+FAIL
+
+
 ## TODO
 
 ### 1. Implement functionality to auto create a network structure , Module 3

@@ -39,16 +39,16 @@ let  AP={
   ssid:DEVICE_NAME,pass:"password",enable:true,ip:"192.168."+DEVICE_NO+".1"
   ,gw:"192.168."+DEVICE_NO+".1",dhcp_start:"192.168."+DEVICE_NO+".2",dhcp_end:"192.168."+DEVICE_NO+".100"};
  
-print('===',DEVICE_NAME,"===");
-print(' AP '+JSON.stringify(AP));
-print("WIFI ",Cfg.get("wifi.sta.ssid")," : ",Cfg.get("wifi.sta.pass"));
-print('===',Cfg.get("device.id"),"===");
+print(DEVICE_NAME,'===',DEVICE_NAME,"===");
+print(DEVICE_NAME,' AP '+JSON.stringify(AP));
+print(DEVICE_NAME,"WIFI ",Cfg.get("wifi.sta.ssid")," : ",Cfg.get("wifi.sta.pass"));
+print(DEVICE_NAME,'===',Cfg.get("device.id"),"===");
 
 let wifi_setup=ffi('void change_wifi()');
 let iotains=["iotain_0","iotain_1","iotain_2","iotain_3","iotain_4"];
 if(s.status==="TO_COMMIT")
 {
-  print("Updating Device Config");
+  print(DEVICE_NAME,"Updating Device Config");
   Cfg.set({wifi:{ap:AP}});
   Cfg.set({device:{id:DEVICE_NAME}}); 
   Cfg.set({upd_reset_count:1});
@@ -75,13 +75,14 @@ let start_blink=ffi('void start_blink()');
 let stop_blink=ffi('void stop_blink()'); 
 
 
-let status={ap:AP,sta_ip:"0.0.0.0",sta_ssid:"",clients:[]}; 
+let status={ap:AP,sta_ip:"0.0.0.0",sta_ssid:Cfg.get("wifi.sta.ssid"),clients:[]}; 
 let get_status=function()
 {
-    status.sta_ssid=Cfg.get("wifi.sta.ssid");
     status.clients=clients;
     status.myHostIp=myHostIp;
+    status.resources=resources;
     status.mode=Cfg.get("upd_reset_count"); ;
+    status.name=DEVICE_NAME;
     return {status:status};
 
 };
@@ -89,14 +90,15 @@ let get_status=function()
 let reg_timer=-1;
 let register=function(host,sta_ip)
 {
-  print("register: calling ",host," my ip ",sta_ip);
+  print(DEVICE_NAME,"register: calling ",host," my ip ",sta_ip);
   http_call(host+"/rpc/register",{ssid: DEVICE_NAME, ip: sta_ip}); 
 };
 let get_info=function()
 {
   RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) { 
     status.sta_ip = resp.wifi.sta_ip; 
-
+    status.sta_ssid="iotain_"+status.sta_ip.slice(8, 9) ;
+    
     myHostIp="192.168."+status.sta_ip.slice(8, 9)+".1";
 
     register( "192.168."+status.sta_ip.slice(8, 9)+".1", status.sta_ip ); 
@@ -105,27 +107,18 @@ let get_info=function()
 gc(true);
 let clients=[]; 
 let myHostIp="192.168."+DEVICE_NO+".1";
+let timer_count=0;
 let http_call=function(url,body)
 {
-   print("HTTP CALL ",url,JSON.stringify(body));
+   print(DEVICE_NAME,"HTTP CALL ",url,JSON.stringify(body));
 
    HTTP.query({
     url: url,
     data:body,
 		success: function(body, full_http_msg) {
-      print(body); 
-      if(body!==undefined && ( body.indexOf("Already")>-1 || body.indexOf("Registered")>-1))
-      {
-        if(reg_timer!==-1)
-        {
-          Timer.del(reg_timer);
-          reg_timer=-1;
-        }
- 
-      }
-      
+      print(DEVICE_NAME,body);       
 		},
-		error: function( s ) { print(s); },   
+		error: function( s ) { print(DEVICE_NAME,s); },   
 	}); 
     
 };
@@ -145,7 +138,7 @@ let find_resource=function(res_id)
 };
 let perform_job=function(job)
 {
-    print("Performing ",job.res_name);
+    print(DEVICE_NAME,"Performing ",job.res_name);
     return {message:"Job DOne Brow!!!",val:1.2};
     
 };
@@ -160,14 +153,11 @@ let find_request=function(req_id)
         }
     }
     return undefined;
- 
- 
 };
 let update_request=function(req)
 {
      for(let i=0;i<requests.length;i++)
     {
-      //  print("REQ ID ",requests[i].req_id," in ",req.req_id);;
         if(requests[i].req_id===req.req_id)
         {
             requests[i].status=req.status;
@@ -181,15 +171,18 @@ let fwd_request=function(req)
     let _req={
         req_id:req.req_id,
         force_fwd:req.force_fwd,
-        src_ip:myHostIp,
+        src_ip:"192.168."+DEVICE_NO+".1",
         status:req.status,
         job:req.job
     }; 
-    print("FWD RQ FROM:",req.src_ip," JOB:",req.job.res_name," TO:", JSON.stringify(clients)); 
+    print(DEVICE_NAME,"FWD RQ FROM:",req.src_ip," JOB:",req.job.res_name," TO:", JSON.stringify(clients)," And ",myHostIp); 
     for(let i=0;i<clients.length;i++)
-    {
+    { 
         http_call("http://"+clients[i].ip+"/rpc/on_request",_req);
     }
+    _req.src_ip=status.sta_ip;
+    http_call("http://"+myHostIp+"/rpc/on_request",_req);
+
     return {"forwarded_to":clients}; 
 };
 let add_request=function(req)
@@ -197,7 +190,6 @@ let add_request=function(req)
     requests.push(req); 
     return fwd_request(req); 
 }; 
-//req_id,src_ip,src_name,job,status
 let on_request=function(req)
 {  
    gc(true); 
@@ -233,7 +225,7 @@ let on_request=function(req)
 let rev_request=function(req)
 { 
    let rq=update_request(req); 
-    print("FWD RES TO:",rq.src_ip," JOB:",rq.job.res_name);
+    print(DEVICE_NAME,"FWD RES TO:",rq.src_ip," JOB:",rq.job.res_name);
          http_call("http://"+rq.src_ip+"/rpc/on_callback",rq);
    
     return {"reverted_to":(rq.src_ip)}; 
@@ -271,13 +263,13 @@ RPC.addHandler('register',function(args)
 });  
 RPC.addHandler('on_callback',function(args){
 
-  print("callback on "+DEVICE_NAME);
+  print(DEVICE_NAME,"callback on "+DEVICE_NAME);
   return on_callback(args);
 
 });  
 RPC.addHandler('on_request',function(args){
 
-  print("request on "+DEVICE_NAME);
+  print(DEVICE_NAME,"request on "+DEVICE_NAME);
   return on_request(args);
 
 }); 
@@ -290,16 +282,11 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
   let evs = '???';
   if (ev === Net.STATUS_DISCONNECTED) {
 
-    if(reg_timer===-1)
-    {
-      Timer.del(reg_timer);
-      reg_timer=-1;
-    } 
     start_blink();
     evs = 'DISCONNECTED';
     status.sta_ip="0.0.0.0";
     diconnect_count++; 
-    print("Still Disconnected ",diconnect_count); 
+    print(DEVICE_NAME,"Still Disconnected ",diconnect_count); 
     if(diconnect_count>=2  )
     {
       diconnect_count=0; 
@@ -309,7 +296,7 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
       }
       if(index===iotains.length)
         index=0;
-      print("Connecting to ",iotains[index]);
+      print(DEVICE_NAME,"Connecting to ",iotains[index]);
       Cfg.set({wifi:{sta:{ssid:iotains[index++],pass:"password"}}});
       wifi_setup(); 
     } 
@@ -328,20 +315,27 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
       Timer.del(reg_timer);
       reg_timer=-1;
     }
+    timer_count=0;
     reg_timer=Timer.set(5000,Timer.REPEAT,function(args){
  
+      if(timer_count++ >2)
+      {
+        Timer.del(reg_timer);
+        reg_timer=-1;
+        return;
+      }
       get_info(); 
 
     },null);
      
   }
-  print('== Net event:', ev, evs);
+  print(DEVICE_NAME,'== Net event:', ev, evs);
   evs=undefined;
   gc(true);
 }, null);
  
 let v="25";
-print("Worker JS of "+DEVICE_NAME+" v",v," Loaded");
+print(DEVICE_NAME,"Worker JS of "+DEVICE_NAME+" v",v," Loaded");
 let upd_commit=function()
 {
     let s={
