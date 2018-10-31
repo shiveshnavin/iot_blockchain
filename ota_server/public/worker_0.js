@@ -16,13 +16,15 @@ if(DEVICE_NAME==="iotain_0")
   Cfg.set({device:{id:DEVICE_NAME}});
 }   
 let led =5; 
+let led2=4;
 if(DEVICE_NAME==="iotain_3" || DEVICE_NAME==="iotain_0")
 {
-  led=2;
+  led=2;led2=4;
 }
 else{
-  led=5;
-}
+  led=5;led2=4;
+} 
+GPIO.set_mode(led2,GPIO.MODE_OUTPUT);
 let read_data=function(file){
 	let clon=File.read(file);
 	if(clon===null || clon===undefined){
@@ -51,7 +53,6 @@ if(s.status==="TO_COMMIT")
   print(DEVICE_NAME,"Updating Device Config");
   Cfg.set({wifi:{ap:AP}});
   Cfg.set({device:{id:DEVICE_NAME}}); 
-  Cfg.set({upd_reset_count:1});
   if(iotains[0]===DEVICE_NAME)
   {
     Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true},sta_connect_timeout:(10)}}); 
@@ -61,8 +62,7 @@ if(s.status==="TO_COMMIT")
     Cfg.set({wifi:{sta:{ssid:iotains[0],pass:"password",enable:true},sta_connect_timeout:(10) }}); 
      
   } 
-} 
- 
+}  
 read_data=undefined; 
 AP=undefined;
 gc(true);
@@ -72,36 +72,44 @@ let init_led=ffi('void init_led(int,int)');
 init_led(led,100);
 let blink_once=ffi('void blink_once(int)'); 
 let start_blink=ffi('void start_blink()'); 
-let stop_blink=ffi('void stop_blink()'); 
-
-
+let stop_blink=ffi('void stop_blink()');  
+let blink=function(pin)
+{
+  GPIO.write(pin,0);
+  for(let i=0;i<4;i++)
+  {
+    GPIO.toggle(pin);
+    Sys.usleep(500);
+  }
+};
+let on_delay=function()
+{
+  GPIO.write(led2,1);
+  Timer.set(5000,0,function(arg){
+    GPIO.write(led2,0);
+  },null);
+};
 let status={ap:AP,sta_ip:"0.0.0.0",sta_ssid:Cfg.get("wifi.sta.ssid"),clients:[]}; 
 let get_status=function()
 {
     status.clients=clients;
     status.myHostIp=myHostIp;
     status.resources=resources;
-    status.requests=requests;
-    status.mode=Cfg.get("upd_reset_count"); ;
+    status.requests=requests; 
     status.name=DEVICE_NAME;
-    return {status:status};
-
-};
-
+    return {status:status}; 
+}; 
 let reg_timer=-1;
 let register=function(host,sta_ip)
-{
-  print(DEVICE_NAME,"register: calling ",host," my ip ",sta_ip);
+{ 
   http_call(host+"/rpc/register",{ssid: DEVICE_NAME, ip: sta_ip}); 
 };
 let get_info=function()
 {
   RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) { 
     status.sta_ip = resp.wifi.sta_ip; 
-    status.sta_ssid="iotain_"+status.sta_ip.slice(8, 9) ;
-    
-    myHostIp="192.168."+status.sta_ip.slice(8, 9)+".1";
-
+    status.sta_ssid="iotain_"+status.sta_ip.slice(8, 9) ; 
+    myHostIp="192.168."+status.sta_ip.slice(8, 9)+".1"; 
     register( "192.168."+status.sta_ip.slice(8, 9)+".1", status.sta_ip ); 
   }, null); 
 };
@@ -119,8 +127,7 @@ let http_call=function(url,body)
     data:body,
 		success: function(body, full_http_msg) {
       print(DEVICE_NAME,body);       
-		},
-		error: function( s ) { print(DEVICE_NAME,s); },   
+		}   
 	}); 
     
 };
@@ -140,8 +147,9 @@ let find_resource=function(res_id)
 };
 let perform_job=function(job)
 {
+    on_delay();
     print(DEVICE_NAME,"Performing ",job.res_name);
-    return {message:"Job DOne Brow!!!",val:1.2};
+    return {message:"Job completed on "+DEVICE_NAME,val:10};
     
 };
 let requests=[];
@@ -186,66 +194,7 @@ let fwd_request=function(req)
     http_call("http://"+myHostIp+"/rpc/on_request",_req);
 
     return {"forwarded_to":clients}; 
-};
-let add_request=function(req)
-{
-    requests.push(req); 
-    return fwd_request(req); 
-}; 
-let on_request=function(req)
-{  
-   gc(true); 
-    let res=find_resource(req.job.res_id);
-    if(res===undefined)
-    {
-        let req_hist=find_request(req.req_id);
-        if(req_hist!==undefined)
-        {
-            if(req.force_fwd!==undefined)
-            {
-                fwd_request(req);
-                return {result:clients,status:"forwarding request"};
-            }
-            print("Already Recieved ",req.req_id );
-            return {result:req_hist.status,status:"request already recieved"}; 
-        }
-        else{
-            
-            return {result:add_request(req),status:"forwarding request"};
-
-        }
-    }
-    else{
-        let respo=perform_job(req.job);
-        req.status=respo;
-        requests.push(req);
-        http_call("http://"+req.src_ip+"/rpc/on_callback",req);
-        
-        return  {result:respo,status:"performing job"};
-    } 
-};
-
-let rev_request=function(req)
-{ 
-   let rq=update_request(req); 
-    print(DEVICE_NAME,"FWD RES TO:",rq.src_ip," JOB:",rq.job.res_name);
-    rq.status=req.status;
-         http_call("http://"+rq.src_ip+"/rpc/on_callback",rq);
-   
-    return {"reverted_to":(rq.src_ip)}; 
-
-};
-let on_callback=function(req)
-{
-    gc(true);
-    let req_hist=find_request(req.req_id);
-    if(req_hist===undefined)
-    {
-        return {result:"FATAL:ERR: request not found on this node"};
-    }
-    return {result:rev_request(req),status:"Response reverted"};
-};
- 
+};    
 RPC.addHandler('status',function(args){
   
   return get_status();
@@ -265,19 +214,60 @@ RPC.addHandler('register',function(args)
   return {status:"Registered"};
 
 });  
-RPC.addHandler('on_callback',function(args){
+RPC.addHandler('on_callback',function(req){
 
-  print(DEVICE_NAME,"callback on "+DEVICE_NAME, " ID ",args.req_id);
-  return on_callback(args);
+  on_delay();
+  Sys.usleep(1000);
+  print(DEVICE_NAME,"callback on "+DEVICE_NAME, " ID ",req.req_id); 
+  gc(true);
+  let req_hist=find_request(req.req_id);
+  if(req_hist===undefined)
+  {
+      return {result:"FATAL:ERR: request not found on this node"};
+  }
+  
+  let rq=update_request(req); 
+  print(DEVICE_NAME,"FWD RES TO:",rq.src_ip," JOB:",rq.job.res_name);
+  rq.status=req.status;
+  http_call("http://"+rq.src_ip+"/rpc/on_callback",rq); 
 
-});  
-RPC.addHandler('on_request',function(args){
+  return {result:{"reverted_to":(rq.src_ip)},status:"Response reverted"};
+});   
+GPIO.write(led2,0);
+RPC.addHandler('on_request',function(req){
+ 
+  blink(led2);
+  print(DEVICE_NAME,"request on "+DEVICE_NAME, " ID ",req.req_id);gc(true); 
+  let res=find_resource(req.job.res_id);
+  if(res===undefined)
+  {
+      let req_hist=find_request(req.req_id);
+      if(req_hist!==undefined)
+      {
+          if(req.force_fwd!==undefined)
+          {
+              fwd_request(req);
+              return {result:clients,status:"forwarding request"};
+          }
+          print("Already Recieved ",req.req_id );
+          return {result:req_hist.status,status:"request already recieved"}; 
+      }
+      else{
+           
+          requests.push(req);  
+          return {result:fwd_request(req),status:"forwarding request"};
 
-  print(DEVICE_NAME,"request on "+DEVICE_NAME, " ID ",args.req_id);
-  return on_request(args);
-
+      }
+  }
+  else{
+      let respo=perform_job(req.job);
+      req.status=respo;
+      requests.push(req);
+      http_call("http://"+req.src_ip+"/rpc/on_callback",req);
+      
+      return  {result:respo,status:"performing job"};
+  } 
 }); 
-/***********--- RPC ***********/
  
 let index=1+JSON.parse(DEVICE_NO);
 start_blink();
@@ -285,7 +275,6 @@ let diconnect_count=0;
 Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
   let evs = '???';
   if (ev === Net.STATUS_DISCONNECTED) {
-
     start_blink();
     evs = 'DISCONNECTED';
     status.sta_ip="0.0.0.0";
@@ -337,26 +326,13 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
   evs=undefined;
   gc(true);
 }, null);
- 
-let v="25";
-print(DEVICE_NAME,"Worker JS of "+DEVICE_NAME+" v",v," Loaded");
 let upd_commit=function()
 {
     let s={
-      firmware_version:v,
       status:"COMMIED_OK"
     }; 
-    File.write(JSON.stringify(s),"updater_data.json");
-
+        File.write(JSON.stringify(s),"updater_data.json");
 };
-
-RPC.addHandler('ping',function(args){
-
-  http_call(args.url,{ping:"on"});
-  return {ping:true};
-});
-
-
 if(s.status==="TO_COMMIT")
 { 
   upd_commit();
