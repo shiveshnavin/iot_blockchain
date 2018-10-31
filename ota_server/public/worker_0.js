@@ -11,12 +11,18 @@ let DEVICE_NAME=Cfg.get("device.id");
 let DEVICE_NO=DEVICE_NAME.slice(7, 8); 
 if(DEVICE_NAME==="iotain_0")
 {
-  DEVICE_NO="3";
+  DEVICE_NO="0";
   DEVICE_NAME="iotain_"+DEVICE_NO;
   Cfg.set({device:{id:DEVICE_NAME}});
 }   
-let led =2; 
-
+let led =5; 
+if(DEVICE_NAME==="iotain_3" || DEVICE_NAME==="iotain_0")
+{
+  led=2;
+}
+else{
+  led=5;
+}
 let read_data=function(file){
 	let clon=File.read(file);
 	if(clon===null || clon===undefined){
@@ -74,6 +80,7 @@ let get_status=function()
 {
     status.sta_ssid=Cfg.get("wifi.sta.ssid");
     status.clients=clients;
+    status.myHostIp=myHostIp;
     status.mode=Cfg.get("upd_reset_count"); ;
     return {status:status};
 
@@ -89,6 +96,9 @@ let get_info=function()
 {
   RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) { 
     status.sta_ip = resp.wifi.sta_ip; 
+
+    myHostIp="192.168."+status.sta_ip.slice(8, 9)+".1";
+
     register( "192.168."+status.sta_ip.slice(8, 9)+".1", status.sta_ip ); 
   }, null); 
 };
@@ -104,21 +114,23 @@ let http_call=function(url,body)
     data:body,
 		success: function(body, full_http_msg) {
       print(body); 
-      if(body!==undefined && body.indexOf("Already")>-1)
+      if(body!==undefined && ( body.indexOf("Already")>-1 || body.indexOf("Registered")>-1))
       {
         if(reg_timer!==-1)
         {
           Timer.del(reg_timer);
           reg_timer=-1;
         }
-      } 
+ 
+      }
       
 		},
 		error: function( s ) { print(s); },   
 	}); 
     
 };
-let resources=[{"res_name":"diring room led","res_id":3},{"res_name":"diring room led","res_id":19935},{"res_name":"diring room led","res_id":1957}];
+let res_base=JSON.parse(DEVICE_NO)*30;
+let resources=[{"res_name":"diring room led","res_id":res_base+1},{"res_name":"diring room led","res_id":res_base+2},{"res_name":"diring room led","res_id":res_base+3}];
 let find_resource=function(res_id)
 {
  
@@ -176,7 +188,7 @@ let fwd_request=function(req)
     print("FWD RQ FROM:",req.src_ip," JOB:",req.job.res_name," TO:", JSON.stringify(clients)); 
     for(let i=0;i<clients.length;i++)
     {
-        http_call("http://"+JSON.stringify(clients[i])+"/rpc/on_request",_req);
+        http_call("http://"+clients[i].ip+"/rpc/on_request",_req);
     }
     return {"forwarded_to":clients}; 
 };
