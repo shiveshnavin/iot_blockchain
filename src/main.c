@@ -1,6 +1,7 @@
 #include "mgos.h"
 #include "mgos_rpc.h" 
 #include "mgos_wifi.h" 
+#include "mgos_gpio.h" 
 
  
 struct state {
@@ -119,14 +120,14 @@ DELAY=delay;
 mgos_gpio_set_mode(pin, MGOS_GPIO_MODE_OUTPUT);
 }
 
-void blink_once(int pin)
+void blink_once(int pin,int delay)
 {
   mgos_gpio_write(pin,1);
-  mgos_msleep(500);
+  mgos_msleep(delay);
   mgos_gpio_write(pin,0);
-  mgos_msleep(500);
+  mgos_msleep(delay);
   mgos_gpio_write(pin,1);
-  mgos_msleep(500);
+  mgos_msleep(delay);
   mgos_gpio_write(pin,0); 
 }
 static void led_timer_cb(void *arg) {
@@ -137,6 +138,19 @@ static void led_timer_cb(void *arg) {
   (void) arg;
 }
 
+int led2=4;
+static void delay_on_cb(void *arg){
+ 
+ mgos_gpio_write(led2,0);
+(void) arg;
+}
+
+void on_delay(int pin,int delay)
+{
+led2=pin;
+ mgos_gpio_write(led2,1);
+mgos_set_timer(delay, 0, delay_on_cb, NULL);
+}
 void stop_blink()
 {
  inhibit_timer=true;

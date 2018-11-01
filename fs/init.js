@@ -6,9 +6,10 @@ load('api_config.js');
 
 let wifi_setup=ffi('bool change_wifi()'); 
 let init_led=ffi('void init_led(int,int)'); 
-let blink_once=ffi('void blink_once(int)'); 
+let blink_once=ffi('void blink_once(int,int)'); 
 let start_blink=ffi('void start_blink()'); 
 let stop_blink=ffi('void stop_blink()'); 
+let on_delay=ffi('void on_delay(int,int)'); 
 let read_data=function(file){
 	let clon=File.read(file);
 	if(clon===null || clon===undefined){

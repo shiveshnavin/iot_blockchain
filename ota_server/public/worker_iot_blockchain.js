@@ -14,23 +14,16 @@ if(DEVICE_NAME==="iotain_0")
   DEVICE_NO="0";
   DEVICE_NAME="iotain_"+DEVICE_NO;
   Cfg.set({device:{id:DEVICE_NAME}});
-}    
+}   
 let led =5; 
 let led2=4;
-let isEsp=DEVICE_NAME==="iotain_3" || DEVICE_NAME==="iotain_0" || DEVICE_NAME==="iotain_4";
-if(isEsp)
+if(DEVICE_NAME==="iotain_3" || DEVICE_NAME==="iotain_0")
 {
-  led=2; 
-  
-  GPIO.set_mode(5,GPIO.MODE_OUTPUT);
-
+  led=2;led2=4;
 }
 else{
-  led=5; 
+  led=5;led2=4;
 } 
-
-
-
 GPIO.set_mode(led2,GPIO.MODE_OUTPUT);
 let read_data=function(file){
 	let clon=File.read(file);
@@ -72,14 +65,30 @@ if(s.status==="TO_COMMIT")
 }  
 read_data=undefined; 
 AP=undefined;
-gc(true); 
+gc(true);
+GPIO.set_mode(led, GPIO.MODE_OUTPUT);  // And turn on/off the LED
 
 let init_led=ffi('void init_led(int,int)'); 
 init_led(led,100);
-let blink_once=ffi('void blink_once(int,int)'); 
+let blink_once=ffi('void blink_once(int)'); 
 let start_blink=ffi('void start_blink()'); 
-let stop_blink=ffi('void stop_blink()');   
-let on_delay=ffi('void on_delay(int,int)');   
+let stop_blink=ffi('void stop_blink()');  
+let blink=function(pin)
+{
+  GPIO.write(pin,0);
+  for(let i=0;i<4;i++)
+  {
+    GPIO.toggle(pin);
+    Sys.usleep(500);
+  }
+};
+let on_delay=function()
+{
+  GPIO.write(led2,1);
+  Timer.set(5000,0,function(arg){
+    GPIO.write(led2,0);
+  },null);
+};
 let status={ap:AP,sta_ip:"0.0.0.0",sta_ssid:Cfg.get("wifi.sta.ssid"),clients:[]}; 
 let get_status=function()
 {
@@ -99,7 +108,6 @@ let get_info=function()
 {
   RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) { 
     status.sta_ip = resp.wifi.sta_ip; 
-    status.cfg_sta_ip=Cfg.get("wifi.sta.ip");
     status.sta_ssid="iotain_"+status.sta_ip.slice(8, 9) ; 
     myHostIp="192.168."+status.sta_ip.slice(8, 9)+".1"; 
     register( "192.168."+status.sta_ip.slice(8, 9)+".1", status.sta_ip ); 
@@ -139,24 +147,9 @@ let find_resource=function(res_id)
 };
 let perform_job=function(job)
 {
-  let res={message:"Job completed on "+DEVICE_NAME,val:10};
-    if(job.res_id===1001)
-    { 
-        let status="on";
-        if(job.action==="turn_on")
-        {
-          status="on";
-          GPIO.write(5,1);
-        }
-        else{
-          status="off";
-          GPIO.write(5,0);
-        }
-        res={message:"LED Status Changed ! Job completed on "+DEVICE_NAME,led:status};
-    }
-    on_delay(led2,2000);
+    on_delay();
     print(DEVICE_NAME,"Performing ",job.res_name);
-    return res;
+    return {message:"Job completed on "+DEVICE_NAME,val:10};
     
 };
 let requests=[];
@@ -183,7 +176,6 @@ let update_request=function(req)
     } 
 };
 
-
 let fwd_request=function(req)
 {
     let _req={
@@ -203,66 +195,8 @@ let fwd_request=function(req)
 
     return {"forwarded_to":clients}; 
 };    
-
-
-/************Device Specific */ 
- 
-load('api_esp32_touchpad.js'); 
-let ts = TouchPad.GPIO[14];
-let lastTouch=0;
-let led_on=false;
-let on_touch=function(st)
-{
- 
-  let val = TouchPad.readFiltered(ts);
-  print('Status:', st, 'Value:', val);   
-  let req={
-    req_id:JSON.stringify(Timer.now()),
-    src_ip:"0.0.0.0",
-    status:{"message":"under process"},
-    job:{"res_id":1001,"res_name":"LED Strip","action":led_on?"turn_off":"turn_on"}
-  };
-  led_on=!led_on;
-  RPC.call(RPC.LOCAL, 'on_request', req, function (resp, ud) {
-    print('Response:', JSON.stringify(resp));
-  }, null);
-
-};
- 
-
-if(DEVICE_NAME==="iotain_3")
-{
-  resources.push({"res_name":"LED Strip","res_id":1001});
-}
-
-TouchPad.init();
-TouchPad.filterStart(10);
-TouchPad.setMeasTime(0x1000, 0xffff);
-TouchPad.setVoltage(TouchPad.HVOLT_2V4, TouchPad.LVOLT_0V8, TouchPad.HVOLT_ATTEN_1V5);
-TouchPad.config(ts, 0);
-Sys.usleep(100000); // wait a bit for initial filtering.
-let noTouchVal = TouchPad.readFiltered(ts);
-let touchThresh = noTouchVal * 2 / 3;
-print('Sensor', ts, 'noTouchVal', noTouchVal, 'touchThresh', touchThresh);
-TouchPad.setThresh(ts, touchThresh);
-TouchPad.isrRegister(function(st) {
-  
-  
-  if(Timer.now()-lastTouch<1.2)
-  {
-    return;
-  }
-  lastTouch=Timer.now();
-  on_touch(st);
-
-}, null);
-TouchPad.intrEnable();
- 
- 
-/************Device Specific */
 RPC.addHandler('status',function(args){
-  on_delay(led2,1000);
-
+  
   return get_status();
 
 }); 
@@ -280,17 +214,9 @@ RPC.addHandler('register',function(args)
   return {status:"Registered"};
 
 });  
-let last_callback_id=-1;
 RPC.addHandler('on_callback',function(req){
 
-
-  if(last_callback_id===req.req_id)
-  {
-    print("Discarrd Can]llback ",req_id);
-    return {status:"callback already passed"};
-  }
-  last_callback_id=req.id;
-  on_delay(led2,3000);
+  on_delay();
   Sys.usleep(1000);
   print(DEVICE_NAME,"callback on "+DEVICE_NAME, " ID ",req.req_id); 
   gc(true);
@@ -299,6 +225,7 @@ RPC.addHandler('on_callback',function(req){
   {
       return {result:"FATAL:ERR: request not found on this node"};
   }
+  
   let rq=update_request(req); 
   print(DEVICE_NAME,"FWD RES TO:",rq.src_ip," JOB:",rq.job.res_name);
   rq.status=req.status;
@@ -306,10 +233,10 @@ RPC.addHandler('on_callback',function(req){
 
   return {result:{"reverted_to":(rq.src_ip)},status:"Response reverted"};
 });   
-GPIO.write(led2,0); 
-let prev_callback_id=-1;
+GPIO.write(led2,0);
 RPC.addHandler('on_request',function(req){
  
+  blink(led2);
   print(DEVICE_NAME,"request on "+DEVICE_NAME, " ID ",req.req_id);gc(true); 
   let res=find_resource(req.job.res_id);
   if(res===undefined)
@@ -327,26 +254,18 @@ RPC.addHandler('on_request',function(req){
       }
       else{
            
-        blink_once(led2,50);
           requests.push(req);  
           return {result:fwd_request(req),status:"forwarding request"};
 
       }
   }
-  else{ 
-    if(prev_callback_id===req.req_id)
-    {
-      print("Discard ALready performed Job ",req.req_id);
-      return  {result:"Already passed callback",status:"performed job"};
-    }
-    else{ 
-      prev_callback_id=req.req_id;
+  else{
       let respo=perform_job(req.job);
       req.status=respo;
       requests.push(req);
-      http_call("http://"+req.src_ip+"/rpc/on_callback",req); 
+      http_call("http://"+req.src_ip+"/rpc/on_callback",req);
+      
       return  {result:respo,status:"performing job"};
-    } 
   } 
 }); 
  
