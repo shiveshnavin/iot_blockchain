@@ -121,7 +121,7 @@ let http_call=function(url,body)
     
 };
 let res_base=JSON.parse(DEVICE_NO)*30;
-let resources=[{"res_name":"diring room led","res_id":res_base+1},{"res_name":"diring room led","res_id":res_base+2},{"res_name":"diring room led","res_id":res_base+3}];
+let resources=[{"res_name":"diring room led","res_id":res_base+1},{"res_name":"diring room led","res_id":res_base+2}];
 let find_resource=function(res_id)
 {
  
@@ -134,11 +134,14 @@ let find_resource=function(res_id)
     } 
     return undefined; 
 };
+GPIO.set_mode(5,GPIO.MODE_OUTPUT);
 let perform_job=function(job)
 {
-    on_delay();
+
+  let res={message:"Job completed on "+DEVICE_NAME,val:10}; 
+    on_delay(led2,4000);
     print(DEVICE_NAME,"Performing ",job.res_name);
-    return {message:"Job completed on "+DEVICE_NAME,val:10};
+    return res;
     
 };
 let requests=[];
@@ -183,7 +186,7 @@ let fwd_request=function(req)
     http_call("http://"+myHostIp+"/rpc/on_request",_req);
 
     return {"forwarded_to":clients}; 
-};    
+};   
 RPC.addHandler('status',function(args){
   
   return get_status();
@@ -205,7 +208,7 @@ RPC.addHandler('register',function(args)
 });  
 RPC.addHandler('on_callback',function(req){
 
-  on_delay(led2,3000);
+  on_delay(led2,4000);
   Sys.usleep(1000);
   print(DEVICE_NAME,"callback on "+DEVICE_NAME, " ID ",req.req_id); 
   gc(true);
@@ -225,7 +228,6 @@ RPC.addHandler('on_callback',function(req){
 GPIO.write(led2,0);
 RPC.addHandler('on_request',function(req){
  
-  blink_once(led2,50);
   print(DEVICE_NAME,"request on "+DEVICE_NAME, " ID ",req.req_id);gc(true); 
   let res=find_resource(req.job.res_id);
   if(res===undefined)
@@ -243,6 +245,7 @@ RPC.addHandler('on_request',function(req){
       }
       else{
            
+          blink_once(led2,50);
           requests.push(req);  
           return {result:fwd_request(req),status:"forwarding request"};
 
