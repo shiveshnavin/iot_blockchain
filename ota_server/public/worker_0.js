@@ -134,11 +134,29 @@ let find_resource=function(res_id)
     } 
     return undefined; 
 };
+GPIO.set_mode(5,GPIO.MODE_OUTPUT);
 let perform_job=function(job)
 {
-    on_delay(led2,3000);
+
+  let res={message:"Job completed on "+DEVICE_NAME,val:10};
+    if(job.res_id===1001)
+    { 
+        let status="on";
+        if(job.action==="turn_on")
+        {
+          status="on";
+          GPIO.write(5,1);
+        }
+        else{
+          status="off";
+          GPIO.write(5,0);
+        }
+        res={message:"LED Status Changed ! Job completed on "+DEVICE_NAME,led:status};
+    }
+
+    on_delay(led2,4000);
     print(DEVICE_NAME,"Performing ",job.res_name);
-    return {message:"Job completed on "+DEVICE_NAME,val:10};
+    return res;
     
 };
 let requests=[];
@@ -183,7 +201,65 @@ let fwd_request=function(req)
     http_call("http://"+myHostIp+"/rpc/on_request",_req);
 
     return {"forwarded_to":clients}; 
-};    
+};  
+
+/*********DEVICE SPECIFIC */
+
+load('api_esp32_touchpad.js'); 
+let ts = TouchPad.GPIO[14];
+let lastTouch=0;
+let led_on=false;
+let on_touch=function(st)
+{
+ 
+  let val = TouchPad.readFiltered(ts);
+  print('Status:', st, 'Value:', val);   
+  let req={
+    req_id:JSON.stringify(Timer.now()),
+    src_ip:"0.0.0.0",
+    status:{"message":"under process"},
+    job:{"res_id":1001,"res_name":"LED Strip","action":led_on?"turn_off":"turn_on"}
+  };
+  led_on=!led_on;
+  RPC.call(RPC.LOCAL, 'on_request', req, function (resp, ud) {
+    print('Response:', JSON.stringify(resp));
+  }, null);
+
+}; 
+if(DEVICE_NAME==="iotain_3")
+{
+  resources.push({"res_name":"LED Strip","res_id":1001});
+}
+
+TouchPad.init();
+TouchPad.filterStart(10);
+TouchPad.setMeasTime(0x1000, 0xffff);
+TouchPad.setVoltage(TouchPad.HVOLT_2V4, TouchPad.LVOLT_0V8, TouchPad.HVOLT_ATTEN_1V5);
+TouchPad.config(ts, 0);
+Sys.usleep(100000); // wait a bit for initial filtering.
+let noTouchVal = TouchPad.readFiltered(ts);
+let touchThresh = noTouchVal * 2 / 3;
+print('Sensor', ts, 'noTouchVal', noTouchVal, 'touchThresh', touchThresh);
+TouchPad.setThresh(ts, touchThresh);
+TouchPad.isrRegister(function(st) {
+  
+  
+  if(Timer.now()-lastTouch<1.2 )
+  {
+    return;
+  }
+  lastTouch=Timer.now();
+  on_touch(st);
+
+}, null);
+if(DEVICE_NAME!=="iotain_3")
+  TouchPad.intrEnable();
+ 
+ 
+
+
+
+/********************* */
 RPC.addHandler('status',function(args){
   
   return get_status();
@@ -205,7 +281,7 @@ RPC.addHandler('register',function(args)
 });  
 RPC.addHandler('on_callback',function(req){
 
-  on_delay(led2,3000);
+  on_delay(led2,4000);
   Sys.usleep(1000);
   print(DEVICE_NAME,"callback on "+DEVICE_NAME, " ID ",req.req_id); 
   gc(true);
