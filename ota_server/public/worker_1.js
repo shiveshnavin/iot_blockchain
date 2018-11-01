@@ -15,10 +15,10 @@ if(DEVICE_NAME==="iotain_0")
   DEVICE_NAME="iotain_"+DEVICE_NO;
   Cfg.set({device:{id:DEVICE_NAME}});
 }   
-
 let led =5; 
 let led2=4;
-if(DEVICE_NAME==="iotain_3" || DEVICE_NAME==="iotain_0")
+let isEsp=DEVICE_NAME==="iotain_3" || DEVICE_NAME==="iotain_0" || DEVICE_NAME==="iotain_4";
+if(isEsp)
 {
   led=2; 
 }
@@ -66,13 +66,19 @@ if(s.status==="TO_COMMIT")
 }  
 read_data=undefined; 
 AP=undefined;
-gc(true);
+gc(true); 
+
 let init_led=ffi('void init_led(int,int)'); 
 init_led(led,100);
+
+let blink_once=ffi('void blink_once(int,int)'); 
 let start_blink=ffi('void start_blink()'); 
 let stop_blink=ffi('void stop_blink()');   
 let on_delay=ffi('void on_delay(int,int)');   
-let status={ap:AP,sta_ip:"0.0.0.0",sta_ssid:Cfg.get("wifi.sta.ssid"),clients:[]};  
+let start_blink=ffi('void start_blink()'); 
+let stop_blink=ffi('void stop_blink()');   
+
+let status={ap:AP,sta_ip:"0.0.0.0",sta_ssid:Cfg.get("wifi.sta.ssid"),clients:[]}; 
 let get_status=function()
 {
     status.clients=clients;
@@ -115,7 +121,7 @@ let http_call=function(url,body)
     
 };
 let res_base=JSON.parse(DEVICE_NO)*30;
-let resources=[{"res_name":"Res 1","res_id":res_base+1}, {"res_name":"Res 3","res_id":res_base+2}];
+let resources=[{"res_name":"diring room led","res_id":res_base+1},{"res_name":"diring room led","res_id":res_base+2},{"res_name":"diring room led","res_id":res_base+3}];
 let find_resource=function(res_id)
 {
  
@@ -130,7 +136,7 @@ let find_resource=function(res_id)
 };
 let perform_job=function(job)
 {
-    on_delay(led2,3000);
+    on_delay();
     print(DEVICE_NAME,"Performing ",job.res_name);
     return {message:"Job completed on "+DEVICE_NAME,val:10};
     
@@ -197,14 +203,8 @@ RPC.addHandler('register',function(args)
   return {status:"Registered"};
 
 });  
-let last_callback_id=-1;
-RPC.addHandler('on_callback',function(req){ 
-  if(last_callback_id===req.req_id)
-  {
-    print("Discarrd Can]llback ",req_id);
-    return {status:"callback already passed"};
-  }
-  last_callback_id=req.id;
+RPC.addHandler('on_callback',function(req){
+
   on_delay(led2,3000);
   Sys.usleep(1000);
   print(DEVICE_NAME,"callback on "+DEVICE_NAME, " ID ",req.req_id); 
@@ -223,9 +223,9 @@ RPC.addHandler('on_callback',function(req){
   return {result:{"reverted_to":(rq.src_ip)},status:"Response reverted"};
 });   
 GPIO.write(led2,0);
-let prev_callback_id=-1;
 RPC.addHandler('on_request',function(req){
  
+  blink_once(led2,50);
   print(DEVICE_NAME,"request on "+DEVICE_NAME, " ID ",req.req_id);gc(true); 
   let res=find_resource(req.job.res_id);
   if(res===undefined)
@@ -243,26 +243,18 @@ RPC.addHandler('on_request',function(req){
       }
       else{
            
-let blink_once=ffi('void blink_once(int,int)'); 
-        blink_once(led2,50);
           requests.push(req);  
           return {result:fwd_request(req),status:"forwarding request"};
 
       }
   }
   else{
-    if(prev_callback_id===req.req_id)
-    {
-      print("Discard ALready performed Job ",req.req_id);
-      return  {result:"Already passed callback",status:"performed job"};
-    }
-    else{ 
-      prev_callback_id=req.req_id; 
-      req.status=perform_job(req.job);
+      let respo=perform_job(req.job);
+      req.status=respo;
       requests.push(req);
-      http_call("http://"+req.src_ip+"/rpc/on_callback",req); 
-      return  {result:req.status,status:"performing job"};
-    }
+      http_call("http://"+req.src_ip+"/rpc/on_callback",req);
+      
+      return  {result:respo,status:"performing job"};
   } 
 }); 
  

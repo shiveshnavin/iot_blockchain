@@ -136,7 +136,7 @@ let find_resource=function(res_id)
 };
 let perform_job=function(job)
 {
-    on_delay(led2,3000);
+    on_delay();
     print(DEVICE_NAME,"Performing ",job.res_name);
     return {message:"Job completed on "+DEVICE_NAME,val:10};
     
@@ -225,6 +225,7 @@ RPC.addHandler('on_callback',function(req){
 GPIO.write(led2,0);
 RPC.addHandler('on_request',function(req){
  
+  blink_once(led2,50);
   print(DEVICE_NAME,"request on "+DEVICE_NAME, " ID ",req.req_id);gc(true); 
   let res=find_resource(req.job.res_id);
   if(res===undefined)
@@ -242,7 +243,6 @@ RPC.addHandler('on_request',function(req){
       }
       else{
            
-          blink_once(led2,50);
           requests.push(req);  
           return {result:fwd_request(req),status:"forwarding request"};
 
