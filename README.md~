@@ -341,51 +341,18 @@ Empty Response fixed , turns out HTTP headers were wrong and now set to applicat
 
 ### 1. Implement functionality to auto create a network structure , Module 3
 
-All devices connect to backbone network when in centralized mode
+DONE 
 
-```javascript
-Cfg.set(wifi:{sta:{ssid:"Backbone",paswd:"password"}};
-```
-
-When backbone network goes down or when in chained mode , trigger a scan and connect to the IoT wifi SSID with largest signal 
-
-```javascript
-
-Wifi.scan(..)
-
-```
 ### 2. Formulate Intercom and resource discovery/access architecture
 
-Create flow chart of how requests can be handled/forwarded aand what to do on callbacks
-
+DONE 
 ### 3. Write Intercom functions
 
-Write implementations for 
-```code
-on_request()
-on_callback()
-on_resource()
-
-```
+DONE 
 
 ### 4. Formulate and Implement Algorithm for preventing DHCP assigned IP clashes ( 05/10/18 )
-Background : All device's default IP in AP mode is 192.168.4.1 . When a client connects to AP an IP in range 192.168.4.2 to 192.168.4.100 is assigned to the client
-Problem : When 2 devices connected to each other in 
 
-```code
-iot_1 -----:> iot_0  
-```
-both are having same dhcp range as well as IP , Need to reconfigure dynamically AP or at least manually write an RPC to restart AP with a dhcp range and IP
-such that it dosent clash with any other device in the network .
-
-```javascript
-
-    Cfg.set({wifi:{ap:{
-ssid:"iot_1",pass:"password",enable:true,ip:"192.168.4.50"
-,gw:"192.168.4.50",dhcp_start:"192.168.4.51",dhcp_end:"192.168.4.100"}}});
-
-```
-Above code has to be dynamic through an RPC 
+DONE 
 
 ## Build It Yourself (05/10/18)
 
