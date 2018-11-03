@@ -1,3 +1,323 @@
+main.c
+```c
+#include "mgos.h"
+#include "mgos_rpc.h" 
+#include "mgos_wifi.h" 
+#include "mgos_gpio.h" 
+
+ 
+struct state {
+  struct mg_rpc_request_info *ri; /* RPC request info */
+  int uart_no;                    /* UART number to write to */
+  int status;                     /* Request status */
+  int64_t written;                /* Number of bytes written */
+  FILE *fp;                       /* File to write to */
+};
+
+static void http_cb(struct mg_connection *c, int ev, void *ev_data, void *ud) {
+  struct http_message *hm = (struct http_message *) ev_data;
+  struct state *state = (struct state *) ud;
+
+  switch (ev) {
+    case MG_EV_CONNECT:
+      state->status = *(int *) ev_data;
+      break;
+    case MG_EV_HTTP_CHUNK: {
+      /*
+       * Write data to file or UART. mgos_uart_write() blocks until
+       * all data is written.
+       */
+      size_t n =
+          (state->fp != NULL)
+              ? fwrite(hm->body.p, 1, hm->body.len, state->fp)
+              : mgos_uart_write(state->uart_no, hm->body.p, hm->body.len);
+      if (n != hm->body.len) {
+        c->flags |= MG_F_CLOSE_IMMEDIATELY;
+        state->status = 500;
+      }
+      state->written += n;
+      c->flags |= MG_F_DELETE_CHUNK;
+      break;
+    }
+    case MG_EV_HTTP_REPLY:
+      /* Only when we successfully got full reply, set the status. */
+      state->status = hm->resp_code;
+      LOG(LL_INFO, ("Finished fetching"));
+      c->flags |= MG_F_CLOSE_IMMEDIATELY;
+      break;
+    case MG_EV_CLOSE:
+      LOG(LL_INFO, ("status %d bytes %llu", state->status, state->written));
+      if (state->status == 200) {
+        /* Report success only for HTTP 200 downloads */
+        mg_rpc_send_responsef(state->ri, "{written: %llu}", state->written);
+      } else {
+        mg_rpc_send_errorf(state->ri, state->status, NULL);
+      }
+      if (state->fp != NULL) fclose(state->fp);
+      free(state);
+      break;
+  }
+}
+
+static void fetch_handler(struct mg_rpc_request_info *ri, void *cb_arg,
+                          struct mg_rpc_frame_info *fi, struct mg_str args) {
+  struct state *state;
+  int uart_no = -1;
+  FILE *fp = NULL;
+  char *url = NULL, *path = NULL;
+
+  json_scanf(args.p, args.len, ri->args_fmt, &url, &uart_no, &path);
+
+  if (url == NULL || (uart_no < 0 && path == NULL)) {
+    mg_rpc_send_errorf(ri, 500, "expecting url, uart or file");
+    goto done;
+  }
+
+  if (path != NULL && (fp = fopen(path, "w")) == NULL) {
+    mg_rpc_send_errorf(ri, 500, "cannot open %s", path);
+    goto done;
+  }
+
+  if ((state = calloc(1, sizeof(*state))) == NULL) {
+    mg_rpc_send_errorf(ri, 500, "OOM");
+    goto done;
+  }
+
+  state->uart_no = uart_no;
+  state->fp = fp;
+  state->ri = ri;
+
+  LOG(LL_INFO, ("Fetching %s to %d/%s", url, uart_no, path ? path : ""));
+  if (!mg_connect_http(mgos_get_mgr(), http_cb, state, url, NULL, NULL)) {
+    free(state);
+    mg_rpc_send_errorf(ri, 500, "malformed URL");
+    goto done;
+  }
+
+  (void) cb_arg;
+  (void) fi;
+
+done:
+  free(url);
+  free(path);
+}
+  
+bool change_wifi()
+{
+ 
+  return mgos_wifi_setup((struct mgos_config_wifi *) mgos_sys_config_get_wifi());
+
+}
+ 
+
+
+static int blink_led=5;
+mgos_timer_id led_timer=1911;
+static int DELAY=100;
+static bool inhibit_timer=false;
+void init_led(int pin,int delay)
+{
+blink_led=pin; 
+DELAY=delay;
+mgos_gpio_set_mode(pin, MGOS_GPIO_MODE_OUTPUT);
+}
+
+void blink_once(int pin,int delay)
+{
+  mgos_gpio_write(pin,1);
+  mgos_msleep(delay);
+  mgos_gpio_write(pin,0);
+  mgos_msleep(delay);
+  mgos_gpio_write(pin,1);
+  mgos_msleep(delay);
+  mgos_gpio_write(pin,0); 
+}
+static void led_timer_cb(void *arg) {
+
+  if(inhibit_timer)
+    return;
+   mgos_gpio_toggle(blink_led);
+  (void) arg;
+}
+
+int led2=4;
+static void delay_on_cb(void *arg){
+ 
+ mgos_gpio_write(led2,0);
+(void) arg;
+}
+
+void on_delay(int pin,int delay)
+{
+led2=pin;
+ mgos_gpio_write(led2,1);
+mgos_set_timer(delay, 0, delay_on_cb, NULL);
+}
+void stop_blink()
+{
+ inhibit_timer=true;
+ mgos_clear_timer(led_timer);
+  mgos_msleep(DELAY);
+led_timer=-1;
+inhibit_timer=false;
+}
+void start_blink()
+{
+  inhibit_timer=true;
+	if(led_timer!=(unsigned)(1911))
+	{
+	 stop_blink();
+	}
+  led_timer=mgos_set_timer(DELAY, MGOS_TIMER_REPEAT, led_timer_cb, NULL);
+  mgos_msleep(DELAY);
+  inhibit_timer=false;
+}
+enum mgos_app_init_result mgos_app_init(void) {
+
+  mg_rpc_add_handler(mgos_rpc_get_global(), "Fetch",
+                     "{url: %Q, uart: %d, file: %Q}", fetch_handler, NULL);
+ 
+ 
+ 
+
+
+
+
+
+  return MGOS_APP_INIT_SUCCESS;
+}
+
+
+```
+
+init.js
+```javascript
+load('api_file.js');
+load('api_rpc.js');
+load('api_sys.js');
+load('api_timer.js');   
+load('api_config.js');
+
+let wifi_setup=ffi('bool change_wifi()'); 
+let init_led=ffi('void init_led(int,int)'); 
+let blink_once=ffi('void blink_once(int,int)'); 
+let start_blink=ffi('void start_blink()'); 
+let stop_blink=ffi('void stop_blink()'); 
+let on_delay=ffi('void on_delay(int,int)'); 
+let read_data=function(file){
+	let clon=File.read(file);
+	if(clon===null || clon===undefined){
+		return null;
+	}
+	if(clon.length<5)
+	{
+		print('length of user_data.json is ',clon.length);
+		return null;
+
+	}
+	return JSON.parse(clon);
+};
+let poll=read_data("poll.json");
+let WORKER_FILE="worker.js";
+let fname=WORKER_FILE;
+if(poll.program!==undefined)
+{
+	WORKER_FILE=poll.program;
+}   
+let auto_apply = true;
+let write_data=function(file,data){ 
+	File.write(JSON.stringify(data),file);
+};
+
+let upd_rollback=function(s){
+	print('ugh rolling back');
+	File.remove(WORKER_FILE);
+	File.rename(WORKER_FILE+'.bak', WORKER_FILE);
+	s.status="COMMITED_OK";
+	write_data('updater_data.json',s);
+	Sys.reboot(5);
+};
+
+let unCommitedUpdates=false;  
+let upd_check=function(){
+	print('Checking for Uncommited Updates ');
+	let s = read_data('updater_data.json');
+	if(s===null){
+		s={ 
+			status:"COMMITED_OK"
+		};
+		print('Didnt Find updater_data.json settin to default v',s.firmware_version);
+		write_data('updater_data.json',s);
+	}
+	if(s.status==="COMMITED_OK"){
+		print('COMMITED_OK now loading worker of v',s.firmware_version);
+		s={
+			firmware_version:s.firmware_version,
+			status:"COMMITED_OK"
+		};
+		write_data('updater_data.json',s);
+	}else if(s.status==="TO_COMMIT"){
+		unCommitedUpdates=true;
+		print('Seems like changes to be commited');
+		File.rename(WORKER_FILE, WORKER_FILE+'.bak');
+		File.rename(WORKER_FILE+'.new', WORKER_FILE);
+		Timer.set(10000  , 0, function() {
+			s = read_data('updater_data.json');
+			if(s.status==="COMMIED_OK"){
+				Cfg.set( {device: {firmware_version: s.firmware_version}} ); 
+				print('Seems all went ok when upgrading to v',s.firmware_version);
+			}else{
+				upd_rollback(s);
+			}
+		}, null);
+	}else{
+		print('not sure about status now loading worker');
+	}
+	return s;
+}; 
+
+let callback=null;
+let download=function(url,name,_callback){
+    callback=_callback;
+    let args={"url": url, "file": name};
+    File.remove(name);
+    RPC.call(RPC.LOCAL,'Fetch',args,function(res){
+    	print('Download Res',JSON.stringify(res));
+    	callback(res);
+    	return true;
+    });
+};
+ 
+RPC.addHandler('ota_update',function(args){
+	fname=WORKER_FILE+".new";
+	print('Updating from url... ',args.url);
+	download(args.url,fname,function(res){
+		if(res!==null){
+			let s={
+				files:[{
+					file_o:fname,
+					file_n:fname+".new"
+				}],
+				status:"TO_COMMIT"
+			};   
+			write_data("updater_data.json",s);
+			print('File Updated...Will be Applied on Reboot');
+			if(auto_apply)
+				Sys.reboot(5);
+		}else{
+			print('Failed');
+		} 
+    });
+	return {"result":"Update started !"};
+});
+ 
+
+let s=upd_check();
+load(poll.program);
+
+```
+
+worker_0.js
 ```javascript
 load('api_sys.js'); 
 load('api_wifi.js'); 
