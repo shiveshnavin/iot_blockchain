@@ -1,3 +1,4 @@
+
 load('api_sys.js'); 
 load('api_wifi.js'); 
 load('api_config.js'); 
@@ -11,7 +12,7 @@ let DEVICE_NAME=Cfg.get("device.id");
 let DEVICE_NO=DEVICE_NAME.slice(7, 8); 
 if(DEVICE_NAME==="iotain_0")
 {
-  DEVICE_NO="0";
+  DEVICE_NO="2";
   DEVICE_NAME="iotain_"+DEVICE_NO;
   Cfg.set({device:{id:DEVICE_NAME}});
 }   
@@ -24,8 +25,7 @@ if(isEsp)
 }
 else{
   led=5; 
-} 
-GPIO.set_mode(led2,GPIO.MODE_OUTPUT);
+}  
 let read_data=function(file){
 	let clon=File.read(file);
 	if(clon===null || clon===undefined){
@@ -72,93 +72,32 @@ gc(true);
 
 let LOW=0;
 let HIGH=1;
-let gpio_map=[0,12,16,14,4,5,13];
+let gpio_map=[0,16,5,4,0,14,12,13,15];
 for(let i=0;i<gpio_map.length;i++)
 {
     GPIO.set_mode(gpio_map[i],GPIO.MODE_OUTPUT);
     GPIO.write(gpio_map[i],LOW);
 }
-// K M N Q R S X Z 
-/***
- * S
- * |===|
- * |   |
- * |   |
- * 
- * X
- * |   |
- * |===|
- * |   |
- * 
- * Z
- * |   |
- * |   |
- * |===|
- * 
- * M
- * |   |
- * |===|
- * |===|
- * 
- * N
- * |===
- * |===
- * |===
- * 
- * Q
- * |===|
- * |===|
- * |   |
- * 
- * R
- *  ===|
- *  ===|
- *  ===|
- * 
- * K
- * |===|
- * |===|
- * |===| /\/\/\
- *  
- */
 let char_map={
-    "H":[1,6,3,4],
-    "A":[1,2,3,4,6],
-    "P":[1,2,3,6],
-    "Y":[1,3,6],
-    "D":[1,2,3,4,5],
-    "I":[1],
-    "W":[1,3,4,5],
-    "L":[1,5],
-    "B":[1,2,3,4,5],
-    "C":[1,2,5],
-    "E":[1,2,6,5],
-    "F":[1,2,6],
-    "G":[1,2,5,6,6],
-    "J":[2,3,4,5],
-    "O":[1,2,3,4,5],
-    "T":[1,6,5],
-    "U":[1,3,4,5],
-    "K":[0,1,2,3,4,5,6],
-    "M":[1,3,4,5,6],
-    "N":[1,2,5,6],
-    "Q":[1,2,3,4,6],
-    "R":[2,3,4,5,6],
-    "S":[1,2,3,4],
-    "X":[1,3,4,6],
-    "Z":[1,3,4,5],
-    "-":[]
-
+    h:[1,6,4,3],
+    a:[1,5,4,3,6],
+    p:[1,5,4,6],
+    y:[1,4,6,7],
+    d:[1,5,4,3,2],
+    i:[6,7,2],
+    w:[1,2,3,4,7],
+    l:[1,2,6,7,2],
+    ' ':[]
 };
 
 let cStr="";
-let cIndex=1;
+let cIndex=0;
 let cDelay=300;
 let cTimer=-1;
 let set_chars=function(str,delay)
 {
-    cStr=JSON.stringify(str);
-    cIndex=1;
+    cStr=str;
+    cIndex=0;
     cDelay=delay; 
     
     print("Setting ",cStr);
@@ -166,47 +105,30 @@ let set_chars=function(str,delay)
     if(cTimer!==-1)
     {
         Timer.del(cTimer);
-        cTimer=-1;
     }
     cTimer=Timer.set(cDelay,1,function(args){
 
-        if(cIndex >= cStr.length-1)
+        if(cIndex===cStr.length)
         {
-            cIndex=1;
+            set_chars(cStr,);
         }
 
-        let cr=cStr.slice(cIndex,cIndex+1);
-        cIndex++;
-        let arr=char_map[cr]; 
-        if(arr===undefined)
-        return;
+        let cr=str.charAt(i); 
+        console.log(cr+" --> "+char_map[cr]);
         
-
-        print("Character ",cr," Map : ",JSON.stringify(arr));
- 
+        let arr=char_map[cr];
         for(let k=1;k<gpio_map.length;k++)
         {
-            let found=false;
-            for(let l=0;l<arr.length;l++)
+            if(arr.indexOf(k)===-1)
             {
-                if(JSON.stringify(arr[l])===JSON.stringify(k))
-                {
-                    found=true;
-                    break;
-                }
+                //GPIO.write(gpio_map[k],0);
+                console.log("Turn off "+gpio_map[k]);
             }
-            if(!found)
-            {
-                print("Set ",k," GPIO ",gpio_map[k]," LOW");
-                GPIO.write(gpio_map[k],LOW);
-               
-            }
-           
         }
-        for(let j=0;j<arr.length;j++)
+        for(let j=0;j<char_map[cr].length;j++)
         {
-            print("Set ",arr[j]," GPIO ",gpio_map[arr[j]]," HIGH");
-            GPIO.write(gpio_map[arr[j]],HIGH);
+            console.log("Turn On "+gpio_map[arr[j]]);
+            //GPIO.write(gpio_map[arr[j]],1);
         } 
 
 
@@ -216,68 +138,25 @@ let set_chars=function(str,delay)
     
     
 };
-set_chars("HAPYDIWALI",2000);
+//set_chars("happy diwali",300);
 
-RPC.addHandler('set_chars',function(req)
+RPC.addHandler('set_cars',function(req)
 {
-    
     set_chars(req.string,req.delay);
     return {status:"Setting"};
 });
+ 
+Timer.set(1000,1,function(ar){
 
-RPC.addHandler('set_gpio',function(args){
-
-
-    if(cTimer!==-1)
-    {
-        Timer.del(cTimer);
-        cTimer=-1;
-        Sys.usleep(cDelay+100);
-    }
-    if(args.pin===undefined || args.val===undefined)
-    {
-        return {status:"Undefinde data"};
-    }
-    GPIO.write(args.pin,args.val);
-    print("Setting Pin : ",args.pin," Val : ",args.val);
-
-    return {status:"Val set"};
-
-});
-
-
-RPC.addHandler('set_status',function(args){
-
-
-    if(cTimer!==-1)
-    {
-        Timer.del(cTimer);
-        cTimer=-1;
-        Sys.usleep(cDelay+100);
-    }
     for(let i=0;i<gpio_map.length;i++)
     {
-        GPIO.write(gpio_map[i],args.status);
+        GPIO.toggle(gpio_map[i]);
+        Sys.usleep(1000);
     }
     
-    return {status:"Status Set"};
 
-});
-/*
-    cIndex=0;
-    Timer.set(1000,1,function(a){
+},null);
 
-        if(cIndex===gpio_map.length)
-        {
-            cIndex=1;
-        }
-        GPIO.toggle(gpio_map[cIndex]);
-        print(gpio_map[cIndex++]);
-        Sys.usleep(1000);
-        
-    },null);
-    
- */
 
 
 /***************************/
