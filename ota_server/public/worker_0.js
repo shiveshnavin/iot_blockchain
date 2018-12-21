@@ -17,7 +17,7 @@ if(DEVICE_NAME==="iotain_0")
 }   
 let led =5; 
 let led2=4;
-let isEsp=DEVICE_NAME==="iotain_3" || DEVICE_NAME==="iotain_0" || DEVICE_NAME==="iotain_4";
+let isEsp=DEVICE_NAME==="iotain_0" || DEVICE_NAME==="iotain_2" || DEVICE_NAME==="iotain_4";
 if(isEsp)
 {
   led=2; 
@@ -68,220 +68,329 @@ read_data=undefined;
 AP=undefined;
 gc(true); 
 
-/***************************/
+let init_led=ffi('void init_led(int,int)'); 
+init_led(led,100);
 
-let LOW=0;
-let HIGH=1;
-let gpio_map=[0,12,16,14,4,5,13];
-for(let i=0;i<gpio_map.length;i++)
+let blink_once=ffi('void blink_once(int,int)'); 
+let start_blink=ffi('void start_blink()'); 
+let stop_blink=ffi('void stop_blink()');   
+let on_delay=ffi('void on_delay(int,int)');   
+let start_blink=ffi('void start_blink()'); 
+let stop_blink=ffi('void stop_blink()');   
+
+let status={ap:AP,sta_ip:"0.0.0.0",sta_ssid:Cfg.get("wifi.sta.ssid"),clients:[]}; 
+let get_status=function()
 {
-    GPIO.set_mode(gpio_map[i],GPIO.MODE_OUTPUT);
-    GPIO.write(gpio_map[i],LOW);
-}
-// K M N Q R S X Z 
-/***
- * S
- * |===|
- * |   |
- * |   |
- * 
- * X
- * |   |
- * |===|
- * |   |
- * 
- * Z
- * |   |
- * |   |
- * |===|
- * 
- * M
- * |   |
- * |===|
- * |===|
- * 
- * N
- * |===
- * |===
- * |===
- * 
- * Q
- * |===|
- * |===|
- * |   |
- * 
- * R
- *  ===|
- *  ===|
- *  ===|
- * 
- * K
- * |===|
- * |===|
- * |===| /\/\/\
- *  
- */
-let char_map={
-    "H":[1,6,3,4],
-    "A":[1,2,3,4,6],
-    "P":[1,2,3,6],
-    "Y":[1,3,6],
-    "D":[1,2,3,4,5],
-    "I":[1],
-    "W":[1,3,4,5],
-    "L":[1,5],
-    "B":[1,2,3,4,5],
-    "C":[1,2,5],
-    "E":[1,2,6,5],
-    "F":[1,2,6],
-    "G":[1,2,5,6,6],
-    "J":[2,3,4,5],
-    "O":[1,2,3,4,5],
-    "T":[1,6,5],
-    "U":[1,3,4,5],
-    "K":[0,1,2,3,4,5,6],
-    "M":[1,3,4,5,6],
-    "N":[1,2,5,6],
-    "Q":[1,2,3,4,6],
-    "R":[2,3,4,5,6],
-    "S":[1,2,3,4],
-    "X":[1,3,4,6],
-    "Z":[1,3,4,5],
-    "-":[]
-
+    status.clients=clients;
+    status.myHostIp=myHostIp;
+    status.resources=resources;
+    status.requests=requests; 
+    status.name=DEVICE_NAME;
+    return {status:status}; 
+}; 
+let reg_timer=-1;
+let register=function(host,sta_ip)
+{ 
+  http_call(host+"/rpc/register",{ssid: DEVICE_NAME, ip: sta_ip}); 
 };
-
-let cStr="";
-let cIndex=1;
-let cDelay=300;
-let cTimer=-1;
-let set_chars=function(str,delay)
+let get_info=function()
 {
-    cStr=JSON.stringify(str);
-    cIndex=1;
-    cDelay=delay; 
+  RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) { 
+    status.sta_ip = resp.wifi.sta_ip; 
+    status.sta_ssid="iotain_"+status.sta_ip.slice(8, 9) ; 
+    myHostIp="192.168."+status.sta_ip.slice(8, 9)+".1"; 
+    register( "192.168."+status.sta_ip.slice(8, 9)+".1", status.sta_ip ); 
+  }, null); 
+};
+gc(true);
+let clients=[]; 
+let myHostIp="192.168."+DEVICE_NO+".1";
+let timer_count=0;
+let http_call=function(url,body)
+{
+   print(DEVICE_NAME,"HTTP CALL ",url,JSON.stringify(body));
+
+   HTTP.query({
+    url: url,
+    headers: { 'Content-Type': 'application/json' },   
+    data:body,
+		success: function(body, full_http_msg) {
+      print(DEVICE_NAME,body);       
+		}   
+	}); 
     
-    print("Setting ",cStr);
-
-    if(cTimer!==-1)
-    {
-        Timer.del(cTimer);
-        cTimer=-1;
-    }
-    cTimer=Timer.set(cDelay,1,function(args){
-
-        if(cIndex >= cStr.length-1)
-        {
-            cIndex=1;
-        }
-
-        let cr=cStr.slice(cIndex,cIndex+1);
-        cIndex++;
-        let arr=char_map[cr]; 
-        if(arr===undefined)
-        return;
-        
-
-        print("Character ",cr," Map : ",JSON.stringify(arr));
+};
+let res_base=JSON.parse(DEVICE_NO)*30;
+let resources=[{"res_name":"diring room led","res_id":res_base+1},{"res_name":"diring room led","res_id":res_base+2},{"res_name":"diring room led","res_id":res_base+3}];
+let find_resource=function(res_id)
+{
  
-        for(let k=1;k<gpio_map.length;k++)
-        {
-            let found=false;
-            for(let l=0;l<arr.length;l++)
-            {
-                if(JSON.stringify(arr[l])===JSON.stringify(k))
-                {
-                    found=true;
-                    break;
-                }
-            }
-            if(!found)
-            {
-                print("Set ",k," GPIO ",gpio_map[k]," LOW");
-                GPIO.write(gpio_map[k],LOW);
-               
-            }
-           
+    for(let i=0;i<resources.length;i++)
+    {
+        if(resources[i].res_id===res_id)
+        { 
+            return resources[i];
         }
-        for(let j=0;j<arr.length;j++)
+    } 
+    return undefined; 
+};
+GPIO.set_mode(5,GPIO.MODE_OUTPUT);
+let perform_job=function(job)
+{
+
+  let res={message:"Job completed on "+DEVICE_NAME,val:10};
+    if(job.res_id===1001)
+    { 
+        let status="on";
+        if(job.action==="turn_on")
         {
-            print("Set ",arr[j]," GPIO ",gpio_map[arr[j]]," HIGH");
-            GPIO.write(gpio_map[arr[j]],HIGH);
-        } 
+          status="on";
+          GPIO.write(5,1);
+        }
+        else{
+          status="off";
+          GPIO.write(5,0);
+        }
+        res={message:"LED Status Changed ! Job completed on "+DEVICE_NAME,led:status};
+    }
 
-
-    },null);
-    
-        
-    
+    on_delay(led2,4000);
+    print(DEVICE_NAME,"Performing ",job.res_name);
+    return res;
     
 };
-set_chars("HAPYDIWALI",2000);
-
-RPC.addHandler('set_chars',function(req)
-{
-    
-    set_chars(req.string,req.delay);
-    return {status:"Setting"};
-});
-
-RPC.addHandler('set_gpio',function(args){
-
-
-    if(cTimer!==-1)
+let requests=[];
+let find_request=function(req_id)
+{ 
+    for(let i=0;i<requests.length;i++)
     {
-        Timer.del(cTimer);
-        cTimer=-1;
-        Sys.usleep(cDelay+100);
-    }
-    if(args.pin===undefined || args.val===undefined)
-    {
-        return {status:"Undefinde data"};
-    }
-    GPIO.write(args.pin,args.val);
-    print("Setting Pin : ",args.pin," Val : ",args.val);
-
-    return {status:"Val set"};
-
-});
-
-
-RPC.addHandler('set_status',function(args){
-
-
-    if(cTimer!==-1)
-    {
-        Timer.del(cTimer);
-        cTimer=-1;
-        Sys.usleep(cDelay+100);
-    }
-    for(let i=0;i<gpio_map.length;i++)
-    {
-        GPIO.write(gpio_map[i],args.status);
-    }
-    
-    return {status:"Status Set"};
-
-});
-/*
-    cIndex=0;
-    Timer.set(1000,1,function(a){
-
-        if(cIndex===gpio_map.length)
+        if(requests[i].req_id===req_id)
         {
-            cIndex=1;
+            return requests[i];
         }
-        GPIO.toggle(gpio_map[cIndex]);
-        print(gpio_map[cIndex++]);
-        Sys.usleep(1000);
-        
+    }
+    return undefined;
+};
+let update_request=function(req)
+{
+     for(let i=0;i<requests.length;i++)
+    {
+        if(requests[i].req_id===req.req_id)
+        {
+            requests[i].status=req.status;
+            return requests[i];
+        }
+    } 
+};
+
+let fwd_request=function(req)
+{
+    let _req={
+        req_id:req.req_id,
+        force_fwd:req.force_fwd,
+        src_ip:"192.168."+DEVICE_NO+".1",
+        status:req.status,
+        job:req.job
+    }; 
+    print(DEVICE_NAME,"FWD RQ FROM:",req.src_ip," JOB:",req.job.res_name," TO:", JSON.stringify(clients)," And ",myHostIp); 
+    for(let i=0;i<clients.length;i++)
+    { 
+        http_call("http://"+clients[i].ip+"/rpc/on_request",_req);
+    }
+    _req.src_ip=status.sta_ip;
+    http_call("http://"+myHostIp+"/rpc/on_request",_req);
+
+    return {"forwarded_to":clients}; 
+};  
+
+/*********DEVICE SPECIFIC */
+
+load('api_esp32_touchpad.js'); 
+let ts = TouchPad.GPIO[14];
+let lastTouch=0;
+let led_on=false;
+let on_touch=function(st)
+{
+ 
+  let val = TouchPad.readFiltered(ts);
+  print('Status:', st, 'Value:', val);   
+  let req={
+    req_id:JSON.stringify(Timer.now()),
+    src_ip:"0.0.0.0",
+    status:{"message":"under process"},
+    job:{"res_id":1001,"res_name":"LED Strip","action":led_on?"turn_off":"turn_on"}
+  };
+  led_on=!led_on;
+  RPC.call(RPC.LOCAL, 'on_request', req, function (resp, ud) {
+    print('Response:', JSON.stringify(resp));
+  }, null);
+
+}; 
+if(DEVICE_NAME==="iotain_2")
+{
+  resources.push({"res_name":"LED Strip","res_id":1001});
+}
+
+TouchPad.init();
+TouchPad.filterStart(10);
+TouchPad.setMeasTime(0x1000, 0xffff);
+TouchPad.setVoltage(TouchPad.HVOLT_2V4, TouchPad.LVOLT_0V8, TouchPad.HVOLT_ATTEN_1V5);
+TouchPad.config(ts, 0);
+Sys.usleep(100000); // wait a bit for initial filtering.
+let noTouchVal = TouchPad.readFiltered(ts);
+let touchThresh = noTouchVal * 2 / 3;
+print('Sensor', ts, 'noTouchVal', noTouchVal, 'touchThresh', touchThresh);
+TouchPad.setThresh(ts, touchThresh);
+TouchPad.isrRegister(function(st) {
+  
+  
+  if(Timer.now()-lastTouch<1.2 )
+  {
+    return;
+  }
+  lastTouch=Timer.now();
+  on_touch(st);
+
+}, null);
+if(DEVICE_NAME==="iotain_0")
+  TouchPad.intrEnable();
+ 
+ 
+
+
+
+/********************* */
+RPC.addHandler('status',function(args){
+  
+  return get_status();
+
+}); 
+RPC.addHandler('register',function(args)
+{ 
+  for(let i=0;i<clients.length;i++)
+  {
+    if(clients[i].ssid===args.ssid)
+    {
+      clients[i].ip=args.ip;
+      return {status:"Already Registered"};
+    }
+  }
+  clients.push({ssid:args.ssid,ip:args.ip});
+  return {status:"Registered"};
+
+});  
+RPC.addHandler('on_callback',function(req){
+
+  on_delay(led2,4000);
+  Sys.usleep(1000);
+  print(DEVICE_NAME,"callback on "+DEVICE_NAME, " ID ",req.req_id); 
+  gc(true);
+  let req_hist=find_request(req.req_id);
+  if(req_hist===undefined)
+  {
+      return {result:"FATAL:ERR: request not found on this node"};
+  }
+  
+  let rq=update_request(req); 
+  print(DEVICE_NAME,"FWD RES TO:",rq.src_ip," JOB:",rq.job.res_name);
+  rq.status=req.status;
+  http_call("http://"+rq.src_ip+"/rpc/on_callback",rq); 
+
+  return {result:{"reverted_to":(rq.src_ip)},status:"Response reverted"};
+});   
+GPIO.write(led2,0);
+RPC.addHandler('on_request',function(req){
+ 
+  print(DEVICE_NAME,"request on "+DEVICE_NAME, " ID ",req.req_id);gc(true); 
+  let res=find_resource(req.job.res_id);
+  if(res===undefined)
+  {
+      let req_hist=find_request(req.req_id);
+      if(req_hist!==undefined)
+      {
+          if(req.force_fwd!==undefined)
+          {
+              fwd_request(req);
+              return {result:clients,status:"forwarding request"};
+          }
+          print("Already Recieved ",req.req_id );
+          return {result:req_hist.status,status:"request already recieved"}; 
+      }
+      else{
+           
+          blink_once(led2,50);
+          requests.push(req);  
+          return {result:fwd_request(req),status:"forwarding request"};
+
+      }
+  }
+  else{
+      let respo=perform_job(req.job);
+      req.status=respo;
+      requests.push(req);
+      http_call("http://"+req.src_ip+"/rpc/on_callback",req);
+      
+      return  {result:respo,status:"performing job"};
+  } 
+}); 
+ 
+let index=1+JSON.parse(DEVICE_NO);
+start_blink();
+let diconnect_count=0;
+Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
+  let evs = '???';
+  if (ev === Net.STATUS_DISCONNECTED) {
+    start_blink();
+    evs = 'DISCONNECTED';
+    status.sta_ip="0.0.0.0";
+    diconnect_count++; 
+    print(DEVICE_NAME,"Still Disconnected ",diconnect_count); 
+    if(diconnect_count>=2  )
+    {
+      diconnect_count=0; 
+      if(iotains[index]===DEVICE_NAME || iotains[index]===Cfg.get("wifi.sta.ssid"))
+      {
+        index++; 
+      }
+      if(index===iotains.length)
+        index=0;
+      print(DEVICE_NAME,"Connecting to ",iotains[index]);
+      Cfg.set({wifi:{sta:{ssid:iotains[index++],pass:"password"}}});
+      wifi_setup(); 
+    } 
+  } else if (ev === Net.STATUS_CONNECTING) {
+    evs = 'CONNECTING';
+  } else if (ev === Net.STATUS_CONNECTED) { 
+    GPIO.write(led,1); 
+    evs = 'CONNECTED';
+  } else if (ev === Net.STATUS_GOT_IP) {
+    evs = 'GOT_IP';
+    diconnect_count=0;
+    stop_blink();
+    GPIO.write(led,1); 
+    if(reg_timer===-1)
+    {
+      Timer.del(reg_timer);
+      reg_timer=-1;
+    }
+    timer_count=0;
+    reg_timer=Timer.set(5000,Timer.REPEAT,function(args){
+ 
+      if(timer_count++ >2)
+      {
+        Timer.del(reg_timer);
+        reg_timer=-1;
+        return;
+      }
+      get_info(); 
+
     },null);
-    
- */
-
-
-/***************************/
-
+     
+  }
+  print(DEVICE_NAME,'== Net event:', ev, evs);
+  evs=undefined;
+  gc(true);
+}, null);
 let upd_commit=function()
 {
     let s={
@@ -297,4 +406,3 @@ if(s.status==="TO_COMMIT")
 s=undefined;
 upd_commit();
 gc(true);
-
