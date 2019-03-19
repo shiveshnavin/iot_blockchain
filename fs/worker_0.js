@@ -4,7 +4,7 @@ load('api_config.js');
 load('api_http.js'); 
 load('api_events.js'); 
 load('api_rpc.js'); 
-load('api_gpio.js'); 
+load('api_gpio.js');
 
 let DEVICE_NAME="iotain_0";
 let led =5;//Cfg.get('board.led1.pin');           // Built-in LED GPIO number
@@ -37,7 +37,7 @@ let start_blink=function()
 
   blink_timer=Timer.set(100,Timer.REPEAT,function(arg){
  
-     GPIO.toggle(led);
+    GPIO.toggle(led);
 
   },null)
 
@@ -52,6 +52,7 @@ let stop_blink=function()
   blink_timer=-1;
 
 };
+
 
 RPC.addHandler('blink',function(args){
 

@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+   <title id="device_t"></title>
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body>
+
+
+
+
+
+
+
+    <div class="container">
+
+            <h1 id="device" class="jumbotron"> </h1>
+            <p>Emulator GUI for iotain project . Limited ESP32/8266 Mongoos OS functionality ported on Node JS. If Requests are not going through due to CORS ACCESS DENIED try installing <a href="https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi/">THIS</a></a></p>
+            
+            <div class="row">
+
+ 
+                <div class="column" >
+                    <h2>Serial Output</h2>
+                    <p id="serial_op"><--  SERIAL BEGIN  --></p>
+                    <button id="clear" class="button2" name="clear">CLEAR</button><br><br>
+                  </div>
+
+
+              <div class="column"  >
+                <h2>GPIO</h2>
+               
+
+                <table id="myTable">
+
+                    <col width="15%">
+                    <col width="70%">
+                    <col width="15%">
+                    
+
+                </table>
+                
+              </div>
+
+
+              <div class="column"  >
+                <h2>Request</h2>
+                
+                <textarea name="req" id="req" placeholder="raw JSON body">{
+	
+                  "req_id":"123",
+                  "src_ip":"127.0.0.1:8080",
+                  "status":{"message":"init"},
+                  "job":{"res_id":61,"res_name":"LED Strip","action":"read"}
+                  
+                }</textarea>
+                <input type="text" id="url" name="url" placeholder="URL" value="/rpc/on_request">
+                <button id="send" class="button1" name="send">SEND</button><br><br>
+                <textarea name="res" id="res" placeholder="response"></textarea>
+
+              </div>
+            </div>
+            
+
+
+   </div>
+
+
+
+   <link href="style.css"  rel="stylesheet" />
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+   <script src="index.js"></script>
+</body>
+</html>
+ 
+ 

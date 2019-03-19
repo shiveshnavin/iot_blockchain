@@ -1,5 +1,5 @@
 # IoTain
-College Minor project on Implementation of IoT using Blockchain
+College Minor & Major project on Implementation of IoT using Blockchain
 
 ![Alt text](screenshots/mesh.gif "Iot Chain") 
 
@@ -10,6 +10,46 @@ The technology will result in an economy of sharing for Internet of Things (IoT)
 ![Alt text](screenshots/iot_market.png "Iot Market") 
 
 Under this network, the interconnection of IoT devices of a home, a business or even a city can truly flourish without worry of transfer congestion, malicious attacks or losing privacy.
+
+## Module 0: Emulator  
+
+https://github.com/shiveshnavin/iot_blockchain_exps
+
+https://docs.google.com/spreadsheets/d/1eNXbXkoAlzQ8lPaVAfOieuCQz-jQHsp9ouRmxi8EvYQ/edit?usp=sharing
+
+
+To Run on Windows
+
+```code
+double click run.bat
+```
+
+To run on Linux
+```code
+./run.sh
+```
+
+To make a request 
+
+run ota_server and send postman or from GUI request 
+```code
+
+http://127.0.0.1:5001/rpc/on_request
+
+{
+	
+	"req_id":"123",
+	"src_ip":"127.0.0.1:8080",
+	"status":{"message":"under process"},
+	"job":{"res_id":61,"res_name":"Ultrasound sensor","action":"read"}
+	
+}
+
+```
+
+
+![Alt text](public/nodes.png "Main Screen")
+![Alt text](public/emu_gui.png "Main Screen")  
 
 
 ## Module 1: Resources 

@@ -1,0 +1,5 @@
+gnome-terminal -e "node index.js 0"
+gnome-terminal -e "node index.js 1"
+gnome-terminal -e "node index.js 2"
+gnome-terminal -e "node index.js 3"
+gnome-terminal -e "node index.js 4"

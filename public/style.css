@@ -1,0 +1,178 @@
+
+.container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -moz-transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+    display: block;
+    overflow: auto;
+}
+
+
+    * {
+    box-sizing: border-box;
+    }
+
+    /* Create three equal columns that floats next to each other */
+    .column {
+    float:left;
+    width: 33.33%;
+    padding: 10px;
+    text-align: center; 
+    }
+
+    .column p{
+      height: 50vh;
+      text-align: left;
+      overflow-y:auto;
+      border-radius: 3pt;
+      background: rgb(241, 241, 241);
+    }
+    /* Clear floats after the columns */
+    .row:after {
+    content: "";
+    display: table;
+    clear: both;
+    }
+
+    /* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
+    @media screen and (max-width: 600px) {
+    .column {
+        width: 100%;
+        max-width: 350px;
+    }
+    }
+
+    table {
+        border-top-width: 1pt;
+         border-top-style : solid;
+         border-top-color: #000 ;
+
+        border-bottom-width: 1pt;
+         border-bottom-style : solid;
+         border-bottom-color: #000 ;
+ 
+margin-left: auto;
+margin-right: auto;
+        align:center;
+    text-align: center;
+    align-self: center;
+    width: 80%;
+    border-collapse: collapse;
+    }
+
+    table, th, td {
+        text-align: center;
+    }
+
+
+    td.io { 
+      padding: 1pt;
+      height: 25px;
+      align:center;
+      display: flex;
+      align-content: center;
+      text-align: center;
+  border:1pt solid black;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: 20px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .1s;
+  transition: .1s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .1s;
+  transition: .1s;
+}
+
+input:checked + .slider {
+  background-color:  rgb(12, 121, 57);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px rgb(12, 121, 57);
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(13px);
+  -ms-transform: translateX(13px);
+  transform: translateX(13px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 17px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+
+.button1 {background-color: #4CAF50;}
+.button2 {background-color: #f44336;}
+
+ button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  width: 100%;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+} 
+textarea {
+  width: 100%;
+  height: 150px;
+  padding: 12px 20px;
+  box-sizing: border-box;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  background-color: #f8f8f8;
+  resize: none;
+}
+
+
+
+input[type=text] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border: 2px solid #ccc;
+}
+
