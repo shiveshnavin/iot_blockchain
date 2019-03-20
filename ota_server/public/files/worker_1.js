@@ -1,3 +1,4 @@
+
 load('api_sys.js'); 
 load('api_wifi.js'); 
 load('api_config.js'); 
@@ -7,13 +8,13 @@ load('api_rpc.js');
 load('api_file.js'); 
 load('api_gpio.js');  
 
-let DEVICE_NAME=Cfg.get("device.idd");  
+let DEVICE_NAME=Cfg.get("device.id");  
 let DEVICE_NO=DEVICE_NAME.slice(7, 8); 
 if(DEVICE_NAME==="iotain_0")
 {
-  DEVICE_NO="0";
+  DEVICE_NO="1";
   DEVICE_NAME="iotain_"+DEVICE_NO;
-  Cfg.set({device:{idd:DEVICE_NAME}});
+  Cfg.set({device:{id:DEVICE_NAME}});
 }   
 let led =5; 
 let led2=4;
@@ -45,7 +46,7 @@ let  AP={
 print(DEVICE_NAME,'===',DEVICE_NAME,"===");
 print(DEVICE_NAME,' AP '+JSON.stringify(AP));
 print(DEVICE_NAME,"WIFI ",Cfg.get("wifi.sta.ssid")," : ",Cfg.get("wifi.sta.pass"));
-print(DEVICE_NAME,'===',Cfg.get("device.idd"),"===");
+print(DEVICE_NAME,'===',Cfg.get("device.id"),"===");
 
 let wifi_setup=ffi('void change_wifi()');
 let iotains=["iotain_0","iotain_1","iotain_2","iotain_3","iotain_4"];
@@ -53,7 +54,7 @@ if(s.status==="TO_COMMIT")
 {
   print(DEVICE_NAME,"Updating Device Config");
   Cfg.set({wifi:{ap:AP}});
-  Cfg.set({device:{idd:DEVICE_NAME}}); 
+  Cfg.set({device:{id:DEVICE_NAME}}); 
   if(iotains[0]===DEVICE_NAME)
   {
     Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true},sta_connect_timeout:(10)}}); 
@@ -95,7 +96,6 @@ let register=function(host,sta_ip)
 };
 let get_info=function()
 {
-  Cfg.set({bt:{enable:true}});
   RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) { 
     status.sta_ip = resp.wifi.sta_ip; 
     status.sta_ssid="iotain_"+status.sta_ip.slice(8, 9) ; 
@@ -122,7 +122,7 @@ let http_call=function(url,body)
     
 };
 let res_base=JSON.parse(DEVICE_NO)*30;
-let resources=[{"res_name":"diring room led","res_id":res_base+1},{"res_name":"diring room led","res_id":res_base+2},{"res_name":"diring room led","res_id":res_base+3}];
+let resources=[{"res_name":"diring room led","res_id":res_base+1},{"res_name":"diring room led","res_id":res_base+2}];
 let find_resource=function(res_id)
 {
  
@@ -139,22 +139,7 @@ GPIO.set_mode(5,GPIO.MODE_OUTPUT);
 let perform_job=function(job)
 {
 
-  let res={message:"Job completed on "+DEVICE_NAME,val:10};
-    if(job.res_id===1001)
-    { 
-        let status="on";
-        if(job.action==="turn_on")
-        {
-          status="on";
-          GPIO.write(5,1);
-        }
-        else{
-          status="off";
-          GPIO.write(5,0);
-        }
-        res={message:"LED Status Changed ! Job completed on "+DEVICE_NAME,led:status};
-    }
-
+  let res={message:"Job completed on "+DEVICE_NAME,val:10}; 
     on_delay(led2,4000);
     print(DEVICE_NAME,"Performing ",job.res_name);
     return res;
@@ -202,100 +187,7 @@ let fwd_request=function(req)
     http_call("http://"+myHostIp+"/rpc/on_request",_req);
 
     return {"forwarded_to":clients}; 
-};  
-
-/*********DEVICE SPECIFIC */
-
-
-/***---TouchPad---- */
-load('api_esp32_touchpad.js'); 
-let ts = TouchPad.GPIO[14];
-let lastTouch=0;
-let led_on=false;
-let on_touch=function(st)
-{
- 
-  let val = TouchPad.readFiltered(ts);
-  print('Status:', st, 'Value:', val);   
-  let req={
-    req_id:JSON.stringify(Timer.now()),
-    src_ip:"0.0.0.0",
-    status:{"message":"under process"},
-    job:{"res_id":1001,"res_name":"LED Strip","action":led_on?"turn_off":"turn_on"}
-  };
-  led_on=!led_on;
-  RPC.call(RPC.LOCAL, 'on_request', req, function (resp, ud) {
-    print('Response:', JSON.stringify(resp));
-  }, null);
-
-}; 
-if(DEVICE_NAME==="iotain_3")
-{
-  resources.push({"res_name":"LED Strip","res_id":1001});
-}
-
-TouchPad.init();
-TouchPad.filterStart(10);
-TouchPad.setMeasTime(0x1000, 0xffff);
-TouchPad.setVoltage(TouchPad.HVOLT_2V4, TouchPad.LVOLT_0V8, TouchPad.HVOLT_ATTEN_1V5);
-TouchPad.config(ts, 0);
-Sys.usleep(100000); // wait a bit for initial filtering.
-let noTouchVal = TouchPad.readFiltered(ts);
-let touchThresh = noTouchVal * 2 / 3;
-print('Sensor', ts, 'noTouchVal', noTouchVal, 'touchThresh', touchThresh);
-TouchPad.setThresh(ts, touchThresh);
-TouchPad.isrRegister(function(st) {
-  
-  
-  if(Timer.now()-lastTouch<1.2 )
-  {
-    return;
-  }
-  lastTouch=Timer.now();
-  on_touch(st);
-
-}, null);
-if(DEVICE_NAME!=="iotain_3")
-  TouchPad.intrEnable();
- 
- 
-/***---HID---- */
-
-load('api_bt_gap.js');
-if(DEVICE_NAME==="iotain_0")
-{
-  Cfg.set({bt:{enable:true}});
-  RPC.addHandler('scan',function(args)
-  {
-
-
-    return {val:GAP.scan(5000,false)};
-
-
-  });
-
-}
-
-
-
-/********************* */
-RPC.addHandler('changeDeviceName',function(args){
-
-  if(args.new_name!==undefined)
-  {
-    let OLD_DEVICE_NAME=DEVICE_NAME;
-    DEVICE_NAME=args.new_name;
-    Cfg.set({device:{idd:DEVICE_NAME}});
-    
-    print(DEVICE_NAME,"Device Rebooting !!");
-    Sys.reboot(500)
-    return {old_name:OLD_DEVICE_NAME,new_name:Cfg.get("device.idd")};
-  }
-  else{
-    return {message:"Empty New Name "};
-  }
-
-});
+};   
 RPC.addHandler('status',function(args){
   
   return get_status();
@@ -373,21 +265,6 @@ RPC.addHandler('on_request',function(req){
 let index=1+JSON.parse(DEVICE_NO);
 start_blink();
 let diconnect_count=0;
-Event.addGroupHandler(GAP.EV_GRP,function(ev,evdata,arg)
-{
-
-  if(ev===GAP.EV_SCAN_RESULT)
-  {
-    print(DEVICE_NAME,"Scan Result ", (evdata)); 
-
-  }
-  else if(ev===GAP.EV_SCAN_STOP){
-
-    print(DEVICE_NAME,"Scan Stopped !", (evdata)); 
-
-  }
-
-},null);
 Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
   let evs = '???';
   if (ev === Net.STATUS_DISCONNECTED) {

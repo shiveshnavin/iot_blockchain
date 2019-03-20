@@ -7,13 +7,13 @@ load('api_rpc.js');
 load('api_file.js'); 
 load('api_gpio.js');  
 
-let DEVICE_NAME=Cfg.get("device.idd");  
+let DEVICE_NAME=Cfg.get("device.id");  
 let DEVICE_NO=DEVICE_NAME.slice(7, 8); 
 if(DEVICE_NAME==="iotain_0")
 {
   DEVICE_NO="0";
   DEVICE_NAME="iotain_"+DEVICE_NO;
-  Cfg.set({device:{idd:DEVICE_NAME}});
+  Cfg.set({device:{id:DEVICE_NAME}});
 }   
 let led =5; 
 let led2=4;
@@ -45,7 +45,7 @@ let  AP={
 print(DEVICE_NAME,'===',DEVICE_NAME,"===");
 print(DEVICE_NAME,' AP '+JSON.stringify(AP));
 print(DEVICE_NAME,"WIFI ",Cfg.get("wifi.sta.ssid")," : ",Cfg.get("wifi.sta.pass"));
-print(DEVICE_NAME,'===',Cfg.get("device.idd"),"===");
+print(DEVICE_NAME,'===',Cfg.get("device.id"),"===");
 
 let wifi_setup=ffi('void change_wifi()');
 let iotains=["iotain_0","iotain_1","iotain_2","iotain_3","iotain_4"];
@@ -53,7 +53,7 @@ if(s.status==="TO_COMMIT")
 {
   print(DEVICE_NAME,"Updating Device Config");
   Cfg.set({wifi:{ap:AP}});
-  Cfg.set({device:{idd:DEVICE_NAME}}); 
+  Cfg.set({device:{id:DEVICE_NAME}}); 
   if(iotains[0]===DEVICE_NAME)
   {
     Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true},sta_connect_timeout:(10)}}); 
@@ -95,7 +95,6 @@ let register=function(host,sta_ip)
 };
 let get_info=function()
 {
-  Cfg.set({bt:{enable:true}});
   RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) { 
     status.sta_ip = resp.wifi.sta_ip; 
     status.sta_ssid="iotain_"+status.sta_ip.slice(8, 9) ; 
@@ -206,8 +205,6 @@ let fwd_request=function(req)
 
 /*********DEVICE SPECIFIC */
 
-
-/***---TouchPad---- */
 load('api_esp32_touchpad.js'); 
 let ts = TouchPad.GPIO[14];
 let lastTouch=0;
@@ -229,7 +226,7 @@ let on_touch=function(st)
   }, null);
 
 }; 
-if(DEVICE_NAME==="iotain_3")
+if(DEVICE_NAME==="iotain_2")
 {
   resources.push({"res_name":"LED Strip","res_id":1001});
 }
@@ -255,47 +252,14 @@ TouchPad.isrRegister(function(st) {
   on_touch(st);
 
 }, null);
-if(DEVICE_NAME!=="iotain_3")
+if(DEVICE_NAME==="iotain_0")
   TouchPad.intrEnable();
  
  
-/***---HID---- */
-
-load('api_bt_gap.js');
-if(DEVICE_NAME==="iotain_0")
-{
-  Cfg.set({bt:{enable:true}});
-  RPC.addHandler('scan',function(args)
-  {
-
-
-    return {val:GAP.scan(5000,false)};
-
-
-  });
-
-}
 
 
 
 /********************* */
-RPC.addHandler('changeDeviceName',function(args){
-
-  if(args.new_name!==undefined)
-  {
-    let OLD_DEVICE_NAME=DEVICE_NAME;
-    DEVICE_NAME=args.new_name;
-    Cfg.set({device:{idd:DEVICE_NAME}});
-    
-    print(DEVICE_NAME,"Device Rebooting !!");
-    Sys.reboot(500)
-    return {old_name:OLD_DEVICE_NAME,new_name:Cfg.get("device.idd")};
-  }
-  else{
-    return {message:"Empty New Name "};
-  }
-
-});
 RPC.addHandler('status',function(args){
   
   return get_status();
@@ -373,21 +337,6 @@ RPC.addHandler('on_request',function(req){
 let index=1+JSON.parse(DEVICE_NO);
 start_blink();
 let diconnect_count=0;
-Event.addGroupHandler(GAP.EV_GRP,function(ev,evdata,arg)
-{
-
-  if(ev===GAP.EV_SCAN_RESULT)
-  {
-    print(DEVICE_NAME,"Scan Result ", (evdata)); 
-
-  }
-  else if(ev===GAP.EV_SCAN_STOP){
-
-    print(DEVICE_NAME,"Scan Stopped !", (evdata)); 
-
-  }
-
-},null);
 Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
   let evs = '???';
   if (ev === Net.STATUS_DISCONNECTED) {

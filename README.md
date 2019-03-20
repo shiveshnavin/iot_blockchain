@@ -11,6 +11,48 @@ The technology will result in an economy of sharing for Internet of Things (IoT)
 
 Under this network, the interconnection of IoT devices of a home, a business or even a city can truly flourish without worry of transfer congestion, malicious attacks or losing privacy.
 
+## Hardware
+
+5 PCB Modules Break Down ---> 
+
+1. ESP32_0 Connects to MQTT Cloud , TouchPad
+2. ESP8266_1 Use only as Router
+3. ESP32_2 Connects to LCD via I2C
+4. ESP8266_3 Use only as Router
+5. ESP32_4 Connects to Human Detector / Arduino
+
+### NodeMCU - ESP32 
+https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
+
+Manufacturer	Espressif Systems
+Type	Microcontroller
+Release date	September 6, 2016
+CPU	Tensilica Xtensa LX6 microprocessor @ 160 or 240 MHz
+Memory	520 KiB SRAM
+Power	3.3 V DC
+
+Peak Current at Startup - 330mA @3.3V / 5V
+Normal Mode - 40mA / 295mA while transmitting
+
+
+### NodeMCU - ESP8266-12E 4M Flash
+
+Manufacturer	Espressif Systems
+Type	32-bit microcontroller
+CPU	@ 80 MHz (default) or 160 MHz
+Memory	32 KiB instruction, 80 KiB user data
+Input	16 GPIO pins
+
+Peak Current at Startup - 330mA @3.3V / 5V
+Normal Mode - 40mA / 295mA while transmitting
+
+REF: https://www.esp8266.com/viewtopic.php?f=13&t=3875
+
+### LCD 
+Current : 30-60mA
+Voltage : 5V
+
+
 ## Module 0: Emulator  
 
 https://github.com/shiveshnavin/iot_blockchain_exps
@@ -48,8 +90,8 @@ http://127.0.0.1:5001/rpc/on_request
 ```
 
 
-![Alt text](public/nodes.png "Main Screen")
-![Alt text](public/emu_gui.png "Main Screen")  
+![Alt text](files/nodes.png "Main Screen")
+![Alt text](files/emu_gui.png "Main Screen")  
 
 
 ## Module 1: Resources 
