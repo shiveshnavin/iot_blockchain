@@ -267,74 +267,77 @@ load('api_bt_gap.js');
 let lastBtScan=[];
 let currentScan=[];
 let scanBtTimer=-1;
-let BT_SCAN_INTERVAL=5000;
-let wasIn=false;
+let BT_SCAN_INTERVAL=2000;
+let lastBtHumanState="";
+let HID_STATE_IN="HUMAN_IN";
+let HID_STATE_OUT="HUMAN_OUT";
 
-if(DEVICE_NAME==="iotain_0")
+let on_human=function(isIn)
 {
-  Cfg.set({bt:{enable:true,keep_enabled:true,adv_enable:true}});
-  RPC.addHandler('scan',function(args)
+  if(isIn)
+  {
+
+  }
+  else
+  {
+
+  }
+};
+  let bt_detector=function(action)
   {
 
 
-    if(args.action===1)
-    {
-      if(scanBtTimer!==-1)
+      if(action===1)
       {
-        Timer.del(scanBtTimer);
+        if(scanBtTimer!==-1)
+        {
+          Timer.del(scanBtTimer);
+          scanBtTimer=-1;
+        }
+        scanBtTimer=Timer.set((BT_SCAN_INTERVAL*2),Timer.REPEAT,function()
+        {
+
+          GAP.scan(BT_SCAN_INTERVAL,false);
+
+        },null);
+
+
+      }
+    else if(action===0)
+      {
+        lastBtHumanState="";
+        if(scanBtTimer===-1)
+        {
+          
+        }
+      else
+        {
+          Timer.del(scanBtTimer);
+        }
         scanBtTimer=-1;
       }
-      scanBtTimer=Timer.set((BT_SCAN_INTERVAL*2),Timer.REPEAT,function()
-      {
-        let found=false; 
-        print(JSON.stringify(lastBtScan));
-        for(let i=0;i<lastBtScan.length;i++)
-        {
+      else{
 
-          if(lastBtScan[i].addr.indexOf("c1:31:8f:7c:11:75")>-1 && !wasIn)
-          {
-            print(DEVICE_NAME,"You are IN ");
-            wasIn=true;
-            found=true;
-          }
-        }
-        if(!found)
-        {
-          wasIn=false;
-          print(DEVICE_NAME,"You are OUT ");
-        }
-
-        GAP.scan(BT_SCAN_INTERVAL,false);
-
-      },null);
-
-
-    }
-   else if(args.action===0)
-    {
-      print(DEVICE_NAME,"api call stop");
-
-      if(scanBtTimer===-1)
-      {
         
       }
-    else
-      {
-        Timer.del(scanBtTimer);
-      }
-      scanBtTimer=-1;
-    }
-    else{
-      print(DEVICE_NAME,"api call view");
 
-    }
+     let res= {last_scan:lastBtScan,no:lastBtScan.length,scan:scanBtTimer===-1?"Stopped":"Running"};
+     print(DEVICE_NAME,"BT Human Identifier -> ",JSON.stringify(res)); 
+     return res;
 
-    return {last_scan:lastBtScan,no:lastBtScan.length};
+  };
 
-  });
 
-}
-
+  if(DEVICE_NAME==="iotain_0")
+  {
+    Cfg.set({bt:{enable:true,keep_enabled:true,adv_enable:true}});
+  
+    RPC.addHandler('scan',function(args)
+    {
+        return bt_detector(args.action);
+    });
+    
+  }
 
 
 /********************* */
@@ -445,13 +448,35 @@ Event.addGroupHandler(GAP.EV_GRP,function(ev,evdata,arg)
   }
   else if(ev===GAP.EV_SCAN_STOP){
 
-    lastBtScan=currentScan;
+    lastBtScan=[];
+    let devices="";
     for(let i=0;i<currentScan.length;i++)
     {
       lastBtScan.push(currentScan[i]);
+      devices=devices+"||"+JSON.stringify(currentScan[i].addr);
     }
     currentScan=[];
-    //print(DEVICE_NAME,"Scan Stopped !"); 
+
+ 
+      if(devices.indexOf("c1:31:8f:7c:11:75")>-1)
+      {
+        if(lastBtHumanState!==HID_STATE_IN)
+          {
+            print(DEVICE_NAME,"You are IN");
+          }
+        on_human(true);  
+        lastBtHumanState=HID_STATE_IN;
+       }
+      else{
+        if(lastBtHumanState!==HID_STATE_OUT)
+        {
+          print(DEVICE_NAME,"You are OUT");
+        }
+        on_human(false); 
+        lastBtHumanState=HID_STATE_OUT;
+      }
+     
+ 
 
   }
 
