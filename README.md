@@ -100,6 +100,10 @@ http://127.0.0.1:5001/rpc/on_request
 #### Demo Video : CLICK IMAGE TO OPEN 
 [![IoT Drum Player : Potato Version](https://img.youtube.com/vi/ghmBqej5D24/0.jpg)](https://www.youtube.com/watch?v=ghmBqej5D24 "Video : IoT Drum Player : Potato Version")
 
+### Individual Human Detector 
+
+Detects a particular person when in vicinity .
+
 ## Module 2: Resource Discovery 
 
 ![Alt text](screenshots/resource_discovery.png "Resource Discovery ") 

@@ -274,6 +274,7 @@ let HID_STATE_OUT="HUMAN_OUT";
 
 let on_human=function(isIn)
 {
+  //print(DEVICE_NAME,"Contains Human ",isIn);
   if(isIn)
   {
 
@@ -337,8 +338,8 @@ let on_human=function(isIn)
         return bt_detector(args.action);
     });
     
+    bt_detector(1);
   }
-
 
 /********************* */
 RPC.addHandler('changeDeviceName',function(args){
@@ -476,6 +477,7 @@ Event.addGroupHandler(GAP.EV_GRP,function(ev,evdata,arg)
         lastBtHumanState=HID_STATE_OUT;
       }
      
+      
  
 
   }
