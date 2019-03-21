@@ -76,7 +76,9 @@ let start_blink=ffi('void start_blink()');
 let stop_blink=ffi('void stop_blink()');   
 let on_delay=ffi('void on_delay(int,int)');   
 let start_blink=ffi('void start_blink()'); 
-let stop_blink=ffi('void stop_blink()');   
+let stop_blink=ffi('void stop_blink()');
+let bt_setup=ffi('int bt_setup(bool)');
+
 
 let status={ap:AP,sta_ip:"0.0.0.0",sta_ssid:Cfg.get("wifi.sta.ssid"),clients:[]}; 
 let get_status=function()
@@ -262,15 +264,72 @@ if(DEVICE_NAME!=="iotain_3")
 /***---HID---- */
 
 load('api_bt_gap.js');
+let lastBtScan=[];
+let currentScan=[];
+let scanBtTimer=-1;
+let BT_SCAN_INTERVAL=5000;
+let wasIn=false;
+
 if(DEVICE_NAME==="iotain_0")
 {
-  Cfg.set({bt:{enable:true}});
+  Cfg.set({bt:{enable:true,keep_enabled:true,adv_enable:true}});
   RPC.addHandler('scan',function(args)
   {
 
 
-    return {val:GAP.scan(5000,false)};
+    if(args.action===1)
+    {
+      if(scanBtTimer!==-1)
+      {
+        Timer.del(scanBtTimer);
+        scanBtTimer=-1;
+      }
+      scanBtTimer=Timer.set((BT_SCAN_INTERVAL*2),Timer.REPEAT,function()
+      {
+        let found=false; 
+        print(JSON.stringify(lastBtScan));
+        for(let i=0;i<lastBtScan.length;i++)
+        {
 
+          if(lastBtScan[i].addr.indexOf("c1:31:8f:7c:11:75")>-1 && !wasIn)
+          {
+            print(DEVICE_NAME,"You are IN ");
+            wasIn=true;
+            found=true;
+          }
+        }
+        if(!found)
+        {
+          wasIn=false;
+          print(DEVICE_NAME,"You are OUT ");
+        }
+
+        GAP.scan(BT_SCAN_INTERVAL,false);
+
+      },null);
+
+
+    }
+   else if(args.action===0)
+    {
+      print(DEVICE_NAME,"api call stop");
+
+      if(scanBtTimer===-1)
+      {
+        
+      }
+    else
+      {
+        Timer.del(scanBtTimer);
+      }
+      scanBtTimer=-1;
+    }
+    else{
+      print(DEVICE_NAME,"api call view");
+
+    }
+
+    return {last_scan:lastBtScan,no:lastBtScan.length};
 
   });
 
@@ -292,6 +351,7 @@ RPC.addHandler('changeDeviceName',function(args){
     return {old_name:OLD_DEVICE_NAME,new_name:Cfg.get("device.idd")};
   }
   else{
+    
     return {message:"Empty New Name "};
   }
 
@@ -378,12 +438,20 @@ Event.addGroupHandler(GAP.EV_GRP,function(ev,evdata,arg)
 
   if(ev===GAP.EV_SCAN_RESULT)
   {
-    print(DEVICE_NAME,"Scan Result ", (evdata)); 
+    
+    let rs= (GAP.getScanResultArg(evdata)); 
+    currentScan.push({addr:rs.addr});
 
   }
   else if(ev===GAP.EV_SCAN_STOP){
 
-    print(DEVICE_NAME,"Scan Stopped !", (evdata)); 
+    lastBtScan=currentScan;
+    for(let i=0;i<currentScan.length;i++)
+    {
+      lastBtScan.push(currentScan[i]);
+    }
+    currentScan=[];
+    //print(DEVICE_NAME,"Scan Stopped !"); 
 
   }
 
@@ -434,7 +502,6 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
         return;
       }
       get_info(); 
-
     },null);
      
   }

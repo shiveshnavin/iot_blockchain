@@ -12,7 +12,7 @@ struct state {
   FILE *fp;                       /* File to write to */
 };
 
-int bt_setup(bool enable)
+esp_err_t bt_setup(bool enable)
 {
  if(!enable)
   {

@@ -29,4 +29,4 @@ filesystem:
 libs:
   - origin: https://github.com/mongoose-os-libs/boards
   - origin: https://github.com/mongoose-os-libs/js-demo-bundle
-  - origin: https://github.com/mongoose-os-libs/bt-common
+  - origin: https://github.com/mongoose-os-libs/rpc-service-gattc
