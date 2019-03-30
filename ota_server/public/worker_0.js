@@ -56,11 +56,13 @@ if(s.status==="TO_COMMIT")
   Cfg.set({device:{idd:DEVICE_NAME}}); 
   if(iotains[0]===DEVICE_NAME)
   {
-    Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true},sta_connect_timeout:(10)}}); 
+    Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true}}});
   }
   else{
 
-    Cfg.set({wifi:{sta:{ssid:iotains[0],pass:"password",enable:true},sta_connect_timeout:(10) }}); 
+    Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true}}});
+
+    //Cfg.set({wifi:{sta:{ssid:iotains[0],pass:"password",enable:true},sta_connect_timeout:(10) }}); 
      
   } 
 }  
