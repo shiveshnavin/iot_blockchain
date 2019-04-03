@@ -4,6 +4,9 @@
 #include "mgos_gpio.h" 
 #include "esp_bt.h"
  
+#include <stdlib.h>
+#include <string.h>
+
 struct state {
   struct mg_rpc_request_info *ri; /* RPC request info */
   int uart_no;                    /* UART number to write to */
@@ -196,3 +199,55 @@ enum mgos_app_init_result mgos_app_init(void) {
 
   return MGOS_APP_INIT_SUCCESS;
 }
+ 
+char * encrypt(char * data,char * key)
+{
+    int i=0;
+    int ik=0;
+    int len_d=strlen(data);
+    int len_k=strlen(key);
+    
+    int siz=sizeof(char) * len_d;
+    char * enc=  (char*) malloc(siz );  
+
+    //LOG(LL_INFO, ("Encrypting : %s", data));
+    
+    for(i=0,ik=0;i<len_d;i++,ik++)
+    {
+        if(ik>=len_k) ik=0;
+        enc[i]=  key[ik] + data[i];
+    }
+    
+    //LOG(LL_INFO, ("Encrypted : %s", enc));
+    return enc;
+    
+}
+
+
+
+char * decrypt(char * enc,char * key)
+{
+    int i=0;
+    int ik=0;
+    int len_d=strlen(enc);
+    int len_k=strlen(key);
+    
+    int siz=sizeof(char) * len_d;
+    char * dec=  (char*) malloc(siz );  
+    
+    //LOG(LL_INFO, ("Decrypting : %s", enc));
+    for(i=0,ik=0;i<len_d;i++,ik++)
+    {
+        if(ik>=len_k) ik=0;
+        dec[i]=  enc[i] - key[ik] ;
+    }
+    
+    //LOG(LL_INFO, ("Decrypted : %s", dec));
+    return dec;
+    
+}
+
+
+
+
+

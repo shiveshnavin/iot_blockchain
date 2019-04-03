@@ -13,7 +13,7 @@ let on_delay=ffi('void on_delay(int,int)');
 let bt_init=ffi('bool mgos_bt_common_init(void)');
 let bt_setup=ffi('int bt_setup(bool)');
 let encrypt=ffi('char * encrypt(char *  ,char *  )');
-let decrypt=ffi('char * decrypt(char *  ,char *  )'); 
+let decrypt=ffi('char * encrypt(char *  ,char *  )');
 
 let read_data=function(file){
 	let clon=File.read(file);
