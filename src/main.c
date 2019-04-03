@@ -199,9 +199,27 @@ enum mgos_app_init_result mgos_app_init(void) {
 
   return MGOS_APP_INIT_SUCCESS;
 }
+
+
+struct my_struct { 
+  struct mg_str data; 
+};
+
+static const struct mjs_c_struct_member my_struct_descr[] = { 
+  {"data", offsetof(struct my_struct, data), MJS_STRUCT_FIELD_TYPE_MG_STR, NULL} 
+  {NULL, 0, MJS_STRUCT_FIELD_TYPE_INVALID, NULL},
+};
+
+const struct mjs_c_struct_member *get_my_struct_descr(void) {
+  return my_struct_descr;
+};
+
+
+
  
-char * encrypt(char * data,char * key)
+void * encrypt(char * data,char * key)
 {
+    struct my_struct res * =  calloc(1, sizeof( my_struct)); 
     int i=0;
     int ik=0;
     int len_d=strlen(data);
@@ -218,15 +236,17 @@ char * encrypt(char * data,char * key)
         enc[i]=  key[ik] + data[i];
     }
     
+    res->data=mg_mk_str(enc);
     //LOG(LL_INFO, ("Encrypted : %s", enc));
-    return enc;
+    return res;
     
 }
 
-
+ 
 
 char * decrypt(char * enc,char * key)
 {
+    struct my_struct res * =  calloc(1, sizeof( my_struct)); 
     int i=0;
     int ik=0;
     int len_d=strlen(enc);
@@ -241,9 +261,9 @@ char * decrypt(char * enc,char * key)
         if(ik>=len_k) ik=0;
         dec[i]=  enc[i] - key[ik] ;
     }
-    
+     res->data=mg_mk_str(enc);
     //LOG(LL_INFO, ("Decrypted : %s", dec));
-    return dec;
+    return res;
     
 }
 

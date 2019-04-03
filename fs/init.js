@@ -14,6 +14,7 @@ let bt_init=ffi('bool mgos_bt_common_init(void)');
 let bt_setup=ffi('int bt_setup(bool)');
 let encrypt=ffi('char * encrypt(char *  ,char *  )');
 let decrypt=ffi('char * decrypt(char *  ,char *  )'); 
+let mystr = ffi('void *get_my_struct_descr(void)');
 
 let read_data=function(file){
 	let clon=File.read(file);
