@@ -11,10 +11,7 @@ let start_blink=ffi('void start_blink()');
 let stop_blink=ffi('void stop_blink()'); 
 let on_delay=ffi('void on_delay(int,int)'); 
 let bt_init=ffi('bool mgos_bt_common_init(void)');
-let bt_setup=ffi('int bt_setup(bool)');
-let encrypt=ffi('void * encrypt(char *  ,char *  )');
-let decrypt=ffi('void * decrypt(char *  ,char *  )');   
-let sd = ffi('void *get_my_struct_descr(void)')();
+let bt_setup=ffi('int bt_setup(bool)'); 
  
 
 let read_data=function(file){

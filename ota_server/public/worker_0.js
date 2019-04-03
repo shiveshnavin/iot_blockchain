@@ -82,6 +82,40 @@ let stop_blink=ffi('void stop_blink()');
 let bt_setup=ffi('int bt_setup(bool)');
 
 
+let  encrypt =function(data,key)
+{
+  let i=0;
+  let ik=0;
+  let len_d=data.length;
+  let len_k=key.length; 
+  let enc= ""; 
+    for(i=0;i<len_d;i++ )
+    {
+        if(ik>=len_k) ik=0;
+        enc=enc+(chr(data.at(i) + key.at(ik) ))
+        ik++;
+    } 
+    return enc;
+    
+};
+ 
+let decrypt =function(enc,key)
+{
+  let i=0;
+  let ik=0;
+  let len_d=enc.length;
+  let len_k=key.length; 
+  let dec= ""; 
+    for(i=0;i<len_d;i++ )
+    {
+        if(ik>=len_k) ik=0;
+        dec=dec+(chr(enc.at(i) - key.at(ik) ))
+        ik++;
+    } 
+    return dec; 
+};
+ 
+ 
 let status={ap:AP,sta_ip:"0.0.0.0",sta_ssid:Cfg.get("wifi.sta.ssid"),clients:[]}; 
 let get_status=function()
 {

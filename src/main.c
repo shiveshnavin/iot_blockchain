@@ -3,8 +3,7 @@
 #include "mgos_wifi.h" 
 #include "mgos_gpio.h" 
 #include "esp_bt.h"
-#include "mjs.h"
-
+ 
 #include <stdlib.h>
 #include <string.h>
 
@@ -200,78 +199,9 @@ enum mgos_app_init_result mgos_app_init(void) {
 
   return MGOS_APP_INIT_SUCCESS;
 }
+
+
  
-struct my_struct { 
-    char *  enc; 
-    char *  dec; 
-    char *  data; 
-};
-
-void * encrypt(char * data,char * key)
-{
-    struct my_struct * res=calloc(1,sizeof(res));
-    int i=0;
-    int ik=0;
-    int len_d=strlen(data);
-    int len_k=strlen(key);
-    
-    int siz=sizeof(char) * len_d;
-    char * enc=  (char*) malloc(siz );  
-
-    //LOG(LL_INFO, ("Encrypting : %s", data));
-    
-    for(i=0,ik=0;i<len_d;i++,ik++)
-    {
-        if(ik>=len_k) ik=0;
-        enc[i]=    data[i] + 10;
-    }
-      
-    res->data= data;
-    res->enc= (enc);
-    //LOG(LL_INFO, ("Encrypted : %s", enc));
-    return res;
-    
-}
-
-
-
-
-static const struct mjs_c_struct_member my_struct_descr[] = {
-  {"enc", offsetof(struct my_struct, enc), MJS_STRUCT_FIELD_TYPE_CHAR_PTR, NULL},
-  {"dec", offsetof(struct my_struct, dec), MJS_STRUCT_FIELD_TYPE_CHAR_PTR, NULL},
-  {"data", offsetof(struct my_struct, data), MJS_STRUCT_FIELD_TYPE_CHAR_PTR, NULL}, 
-  {NULL, 0, MJS_STRUCT_FIELD_TYPE_INVALID, NULL},
-};
-
-
-
-const struct mjs_c_struct_member *get_my_struct_descr(void) {
-  return my_struct_descr;
-};
-void * decrypt(char * enc,char * key)
-{
- struct my_struct * res=calloc(1,sizeof(res));
-    int i=0;
-    int ik=0;
-    int len_d=strlen(enc);
-    int len_k=strlen(key);
-    
-    int siz=sizeof(char) * len_d;
-    char * dec=  (char*) malloc(siz );  
-    
-    //LOG(LL_INFO, ("Decrypting : %s", enc));
-    for(i=0,ik=0;i<len_d;i++,ik++)
-    {
-        if(ik>=len_k) ik=0;
-        dec[i]=  enc[i] - key[ik] ;
-    }
-   
-    res->enc= (enc);
-    res->dec= (dec);
-    //LOG(LL_INFO, ("Decrypted : %s", dec));
-    return res;
-    
-}
 
 
 

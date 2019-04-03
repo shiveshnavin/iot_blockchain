@@ -1,25 +1,7 @@
 load('api_sys.js');   
 load('api_file.js');  
 load('api_timer.js'); 
-
-
-let encrypt=ffi('void * encrypt(char *  ,char *  )');
-let decrypt=ffi('void * decrypt(char *  ,char *  )');  
- 
-let read_data=function(file){
-	let clon=File.read(file);
-	if(clon===null || clon===undefined){
-		return null;
-	}
-	if(clon.length<5)
-	{
-		print('length of',file,' is ',clon.length);
-		return null;
-
-	}
-	return JSON.parse(clon);
-};
-/*
+load('api_rpc.js');  
 
 let  encrypt =function(data,key)
 {
@@ -28,13 +10,13 @@ let  encrypt =function(data,key)
   let len_d=data.length;
   let len_k=key.length;
      
-  let enc= [];
+  let enc= "";
     
     
     for(i=0;i<len_d;i++ )
     {
         if(ik>=len_k) ik=0;
-        enc.push(JSON.stringify(key[ik] ^ data[i]));
+        enc=enc+(chr(data.at(i) + key.at(ik) ))
         ik++;
     }
     
@@ -44,82 +26,58 @@ let  encrypt =function(data,key)
 
 
 
-let decrypt =function(data,key)
+let decrypt =function(enc,key)
 {
   let i=0;
   let ik=0;
-  let len_d=data.length;
+  let len_d=enc.length;
   let len_k=key.length;
      
-  let enc= [];
+  let dec= "";
     
     
-    for(i=0;i<len_d;i++)
+    for(i=0;i<len_d;i++ )
     {
         if(ik>=len_k) ik=0;
-        enc.push(JSON.stringify(key[ik] ^ data[i]));
+        dec=dec+(chr(enc.at(i) - key.at(ik) ))
         ik++;
     }
     
-    return enc;
+    return dec;
     
 };
- */
+ 
 
 let obj={
 
   data:"Fuck u bitch !!"
 
 };
-
-/*
-let str1="Abc";
-let str2="cbe";
-
-print("char at 1 ",str1[1]);
-print("xor at 1 ",   (str1.charAt(1) + str2.charAt(1)));
-*/
-let sd = ffi('void *get_my_struct_descr(void)')();
-print(sd);
-let key="abc";
-let str="AVCCC"; 
-let ss=encrypt(str,key);
-let o = s2o(ss, sd);
-print(" --> ",JSON.stringify(o));
-/*
-let str=JSON.stringify(obj); 
-let file="enc_tmp.json";
-let data=str;
-print("UnEncrypted -> " ,data);
-let key="abc";
-
-
-encrypt(data,key);
-let resStr=File.read(file);
-print("Encrypted -> " ,resStr);
-let res=JSON.parse(resStr.slice(0, resStr.length-1));
-let enc=res.enc;
-print("Encrypted -> " ,enc);
-
  
-decrypt(enc,key); 
-resStr=File.read(file);
-res=JSON.parse(resStr.slice(0, resStr.length-1));
-print("Decrypted -> " , res.dec);
  
 
+RPC.addHandler('enc',function(args)
+{
 
 
-*/
+      let str1=JSON.stringify(args);
+      let key="aezakmi";
+      print("orignal --> ",str1);
+
+      let enc=encrypt(str1,key);
+      print("encrypted --> ",enc);
 
 
+      let dec=decrypt(enc,key);
+      print("decrypted --> ",dec);
 
+      return {
+        decrypted:dec ,
+        encrypted:enc,
+        orignal:str1
+      }
 
-
-
-
-
-
+});
 
 
 
