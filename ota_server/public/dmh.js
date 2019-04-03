@@ -3,9 +3,22 @@ load('api_file.js');
 load('api_timer.js'); 
 
 
-let encrypt=ffi('char * encrypt(char *  ,char *  )');
-let decrypt=ffi('char * decrypt(char *  ,char *  )');
+let encrypt=ffi('void * encrypt(char *  ,char *  )');
+let decrypt=ffi('void * decrypt(char *  ,char *  )');  
  
+let read_data=function(file){
+	let clon=File.read(file);
+	if(clon===null || clon===undefined){
+		return null;
+	}
+	if(clon.length<5)
+	{
+		print('length of',file,' is ',clon.length);
+		return null;
+
+	}
+	return JSON.parse(clon);
+};
 /*
 
 let  encrypt =function(data,key)
@@ -66,26 +79,38 @@ let str2="cbe";
 print("char at 1 ",str1[1]);
 print("xor at 1 ",   (str1.charAt(1) + str2.charAt(1)));
 */
-
+let sd = ffi('void *get_my_struct_descr(void)')();
+print(sd);
+let key="abc";
+let str="AVCCC"; 
+let ss=encrypt(str,key);
+let o = s2o(ss, sd);
+print(" --> ",JSON.stringify(o));
+/*
 let str=JSON.stringify(obj); 
-
+let file="enc_tmp.json";
 let data=str;
 print("UnEncrypted -> " ,data);
 let key="abc";
 
 
-let enc=encrypt(data,key);
+encrypt(data,key);
+let resStr=File.read(file);
+print("Encrypted -> " ,resStr);
+let res=JSON.parse(resStr.slice(0, resStr.length-1));
+let enc=res.enc;
 print("Encrypted -> " ,enc);
 
+ 
+decrypt(enc,key); 
+resStr=File.read(file);
+res=JSON.parse(resStr.slice(0, resStr.length-1));
+print("Decrypted -> " , res.dec);
+ 
 
-let dptr= (decrypt(enc,key));
-let dec=dptr.slice(0,enc.length);
-print("Decrypted -> " , dec);
 
 
-
-
-
+*/
 
 
 
