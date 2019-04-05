@@ -7,6 +7,10 @@ load('api_rpc.js');
 load('api_file.js'); 
 load('api_gpio.js');  
 
+let KEY="AezaKmi";
+let DEV_TOUCH="iotain_0",DEV_I2C="iotain_0",DEV_HID="iotain_0";
+//let DEV_TOUCH="iotain_0",DEV_I2C="iotain_2",DEV_HID="iotain_4";
+
 let DEVICE_NAME=Cfg.get("device.idd");  
 let DEVICE_NO=DEVICE_NAME.slice(7, 8); 
 if(DEVICE_NAME==="iotain_0")
@@ -60,9 +64,8 @@ if(s.status==="TO_COMMIT")
   }
   else{
 
-    Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true}}});
-
-    //Cfg.set({wifi:{sta:{ssid:iotains[0],pass:"password",enable:true},sta_connect_timeout:(10) }}); 
+    //Cfg.set({wifi:{sta:{ssid:"Swati_Niwas",pass:"mother1919",enable:true}}});
+      Cfg.set({wifi:{sta:{ssid:iotains[0],pass:"password",enable:true},sta_connect_timeout:(10) }}); 
      
   } 
 }  
@@ -114,8 +117,7 @@ let decrypt =function(enc,key)
     } 
     return dec; 
 };
- 
- 
+  
 let status={ap:AP,sta_ip:"0.0.0.0",sta_ssid:Cfg.get("wifi.sta.ssid"),clients:[]}; 
 let get_status=function()
 {
@@ -178,7 +180,7 @@ let perform_job=function(job)
 {
 
   let res={message:"Job completed on "+DEVICE_NAME,val:10};
-    if(job.res_id===1001)
+    if(job.res_id===2017 && DEVICE_NAME===DEV_I2C)
     { 
         let status="on";
         if(job.action==="turn_on")
@@ -192,6 +194,17 @@ let perform_job=function(job)
         }
         res={message:"LED Status Changed ! Job completed on "+DEVICE_NAME,led:status};
     }
+    else if(job.res_id==="2016" && DEVICE_NAME===DEV_I2C)
+    {
+
+
+      let payload=decrypt(job.payload,KEY);
+      let params=JSON.parse(payload);
+      printRow(params.txt,params.line);
+
+
+    }
+    
 
     on_delay(led2,4000);
     print(DEVICE_NAME,"Performing ",job.res_name);
@@ -244,60 +257,116 @@ let fwd_request=function(req)
 
 /*********DEVICE SPECIFIC */
 
+/***LCD */
 
-/***---TouchPad---- */
-load('api_esp32_touchpad.js'); 
-let ts = TouchPad.GPIO[14];
-let lastTouch=0;
-let led_on=false;
+
+
+let lcd=LiquidCrystalI2C.create(0x27,20,4); 
+lcd.init();
+lcd.backlight();
+lcd.setCursor(0, 0);
+lcd.clear();  
+lcd.print("! Sab Moh Maya Hai !");
+
+let printRow=function(op,row)
+{
+  
+    lcd.setCursor(0, row);
+    lcd.print("                    "); 
+    lcd.setCursor(0, row); 
+    lcd.print(op);
+
+};
+ 
+/****TOUCH PAD */
+let counter=0;
 let on_touch=function(st)
 {
- 
-  let val = TouchPad.readFiltered(ts);
-  print('Status:', st, 'Value:', val);   
+
+  counter++; 
+   
+  let msg="Touch Count is "+counter;
+  
   let req={
     req_id:JSON.stringify(Timer.now()),
     src_ip:"0.0.0.0",
     status:{"message":"under process"},
-    job:{"res_id":1001,"res_name":"LED Strip","action":led_on?"turn_off":"turn_on"}
+    job:{"res_id":2015,"res_name":"LCD Display",payload:encrypt(JSON.stringify({
+
+      text:msg,
+      line:2
+
+    }),KEY)}
   };
-  led_on=!led_on;
+   
   RPC.call(RPC.LOCAL, 'on_request', req, function (resp, ud) {
     print('Response:', JSON.stringify(resp));
   }, null);
 
-}; 
-if(DEVICE_NAME==="iotain_3")
-{
-  resources.push({"res_name":"LED Strip","res_id":1001});
-}
-
+};
 TouchPad.init();
 TouchPad.filterStart(10);
 TouchPad.setMeasTime(0x1000, 0xffff);
 TouchPad.setVoltage(TouchPad.HVOLT_2V4, TouchPad.LVOLT_0V8, TouchPad.HVOLT_ATTEN_1V5);
-TouchPad.config(ts, 0);
-Sys.usleep(100000); // wait a bit for initial filtering.
-let noTouchVal = TouchPad.readFiltered(ts);
-let touchThresh = noTouchVal * 2 / 3;
-print('Sensor', ts, 'noTouchVal', noTouchVal, 'touchThresh', touchThresh);
-TouchPad.setThresh(ts, touchThresh);
+
+let nonT=[0,0,0];
+ 
+ 
+
+let ts0 = TouchPad.GPIO[4]; TouchPad.config(ts0, 0);
+Sys.usleep(100000);   
+nonT[0]= TouchPad.readFiltered(ts0) * 2 / 3; 
+TouchPad.setThresh(ts0, nonT[0] );
+
+
+let ts1 = TouchPad.GPIO[27]; TouchPad.config(ts1, 0);
+Sys.usleep(100000);   
+nonT[1]= TouchPad.readFiltered(ts1) * 2 / 3; 
+TouchPad.setThresh(ts1, nonT[1]);
+
+
+let ts2 = TouchPad.GPIO[13]; TouchPad.config(ts2, 0);
+Sys.usleep(100000);   
+nonT[2]= TouchPad.readFiltered(ts2)* 2 / 3; 
+TouchPad.setThresh(ts2, nonT[2] );
+
+
 TouchPad.isrRegister(function(st) {
-  
-  
-  if(Timer.now()-lastTouch<1.2 )
-  {
-    return;
-  }
-  lastTouch=Timer.now();
-  on_touch(st);
+
+   
+    on_touch(st);
 
 }, null);
-if(DEVICE_NAME!=="iotain_3")
-  TouchPad.intrEnable();
- 
- 
+
+
 /***---HID---- */
+ 
+let on_human=function(isIn)
+{
+  print(DEVICE_NAME,"Contains Human ",isIn);
+
+  let msg="User is in the vicinity ";
+  if(!isIn)
+  {
+    msg="User left the vicinity ";
+  }
+  let req={
+    req_id:JSON.stringify(Timer.now()),
+    src_ip:"0.0.0.0",
+    status:{"message":"under process"},
+    job:{"res_id":2016,"res_name":"LCD Display",payload:encrypt(JSON.stringify({
+
+      text:msg,
+      line:2
+
+    }),KEY)}
+  };
+   
+  RPC.call(RPC.LOCAL, 'on_request', req, function (resp, ud) {
+    print('Response:', JSON.stringify(resp));
+  }, null);
+
+};
 
 load('api_bt_gap.js');
 let lastBtScan=[];
@@ -308,76 +377,87 @@ let lastBtHumanState="";
 let HID_STATE_IN="HUMAN_IN";
 let HID_STATE_OUT="HUMAN_OUT";
 
-let on_human=function(isIn)
+let bt_detector=function(action)
 {
-  //print(DEVICE_NAME,"Contains Human ",isIn);
-  if(isIn)
-  {
-
-  }
-  else
-  {
-
-  }
-};
-  let bt_detector=function(action)
-  {
 
 
-      if(action===1)
+    if(action===1)
+    {
+      if(scanBtTimer!==-1)
       {
-        if(scanBtTimer!==-1)
-        {
-          Timer.del(scanBtTimer);
-          scanBtTimer=-1;
-        }
-        scanBtTimer=Timer.set((BT_SCAN_INTERVAL*2),Timer.REPEAT,function()
-        {
-
-          GAP.scan(BT_SCAN_INTERVAL,false);
-
-        },null);
-
-
-      }
-    else if(action===0)
-      {
-        lastBtHumanState="";
-        if(scanBtTimer===-1)
-        {
-          
-        }
-      else
-        {
-          Timer.del(scanBtTimer);
-        }
+        Timer.del(scanBtTimer);
         scanBtTimer=-1;
       }
-      else{
+      scanBtTimer=Timer.set((BT_SCAN_INTERVAL*2),Timer.REPEAT,function()
+      {
 
+        GAP.scan(BT_SCAN_INTERVAL,false);
+
+      },null);
+
+
+    }
+  else if(action===0)
+    {
+      lastBtHumanState="";
+      if(scanBtTimer===-1)
+      {
         
       }
+    else
+      {
+        Timer.del(scanBtTimer);
+      }
+      scanBtTimer=-1;
+    }
+    else{
 
-     let res= {last_scan:lastBtScan,no:lastBtScan.length,scan:scanBtTimer===-1?"Stopped":"Running"};
-     print(DEVICE_NAME,"BT Human Identifier -> ",JSON.stringify(res)); 
-     return res;
+      
+    }
 
-  };
+   let res= {last_scan:lastBtScan,no:lastBtScan.length,scan:scanBtTimer===-1?"Stopped":"Running"};
+   print(DEVICE_NAME,"BT Human Identifier -> ",JSON.stringify(res)); 
+   return res;
+
+};
 
 
-  if(DEVICE_NAME==="iotain_0")
-  {
-    Cfg.set({bt:{enable:true,keep_enabled:true,adv_enable:true}});
+if(DEVICE_NAME===DEV_TOUCH)
+{
+    TouchPad.intrEnable();
+    resources.push({"res_name":"Touchpad","res_id":2015});
+}
+else if(DEVICE_NAME===DEV_I2C)
+{
+
+  Cfg.set({i2c:{
+    "enable": true,
+    "freq": 400000,
+    "sda_gpio": 21,
+    "scl_gpio": 22
+  }});
+
+  resources.push({"res_name":"LCD Display","res_id":2016});
+  resources.push({"res_name":"LED Bulb","res_id":2017});
+
   
-    RPC.addHandler('scan',function(args)
-    {
-        return bt_detector(args.action);
-    });
-    
-    bt_detector(1);
-  }
+}
+else if(DEVICE_NAME===DEV_HID)
+{
+  Cfg.set({bt:{enable:true,keep_enabled:true,adv_enable:true}});
+  
+  RPC.addHandler('scan',function(args)
+  {
+      return bt_detector(args.action);
+  });
+  
+  bt_detector(1);
+  resources.push({"res_name":"BT Detector","res_id":2019});
+}
 
-/********************* */
+ 
+
+/**********************/
 RPC.addHandler('changeDeviceName',function(args){
 
   if(args.new_name!==undefined)
@@ -512,8 +592,6 @@ Event.addGroupHandler(GAP.EV_GRP,function(ev,evdata,arg)
         on_human(false); 
         lastBtHumanState=HID_STATE_OUT;
       }
-     
-      
  
 
   }

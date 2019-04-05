@@ -15,11 +15,11 @@ Under this network, the interconnection of IoT devices of a home, a business or 
 
 5 PCB Modules Break Down ---> 
 
-1. ESP32_0 Connects to MQTT Cloud , TouchPad
+1. ESP32_0 Connects to MQTT Cloud , TouchPad(RID: 2015) 
 2. ESP8266_1 Use only as Router
-3. ESP32_2 Connects to LCD via I2C
+3. ESP32_2 Connects to LCD via I2C(RID: 2016) , LED (RID: 2017)
 4. ESP8266_3 Use only as Router
-5. ESP32_4 Connects to Human Detector / Arduino
+5. ESP32_4 Connects to Human Detector(RID: 2019) / Arduino(RID: 2018)
 
 ### NodeMCU - ESP32 
 https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf

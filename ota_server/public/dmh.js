@@ -3,6 +3,8 @@ load('api_file.js');
 load('api_timer.js'); 
 load('api_rpc.js');  
 
+
+
 let  encrypt =function(data,key)
 {
   let i=0;
@@ -50,7 +52,7 @@ let decrypt =function(enc,key)
 
 let obj={
 
-  data:"Fuck u bitch !!"
+  data:" !!"
 
 };
  
