@@ -8,14 +8,14 @@ load('api_file.js');
 load('api_gpio.js');  
 
 let KEY="AezaKmi";
-let DEV_TOUCH="iotain_0",DEV_I2C="iotain_0",DEV_HID="iotain_0";
-//let DEV_TOUCH="iotain_0",DEV_I2C="iotain_2",DEV_HID="iotain_4";
+//let DEV_TOUCH="iotain_0",DEV_I2C="iotain_0",DEV_HID="iotain_0";
+let DEV_TOUCH="iotain_0",DEV_I2C="iotain_2",DEV_HID="iotain_4";
 
 let DEVICE_NAME=Cfg.get("device.idd");  
 let DEVICE_NO=DEVICE_NAME.slice(7, 8); 
 if(DEVICE_NAME==="iotain_0")
 {
-  DEVICE_NO="0";
+  DEVICE_NO="4";
   DEVICE_NAME="iotain_"+DEVICE_NO;
   Cfg.set({device:{idd:DEVICE_NAME}});
 }   
@@ -260,6 +260,7 @@ let fwd_request=function(req)
 /***LCD */
 
 
+load('api_arduino_liquidcrystal_i2c.js')
 
 let lcd=LiquidCrystalI2C.create(0x27,20,4); 
 lcd.init();
@@ -279,6 +280,7 @@ let printRow=function(op,row)
 };
  
 /****TOUCH PAD */
+load('api_esp32_touchpad.js'); 
 let counter=0;
 let on_touch=function(st)
 {
