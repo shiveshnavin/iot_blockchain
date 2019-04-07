@@ -8,17 +8,18 @@ load('api_file.js');
 load('api_gpio.js');  
 
 let KEY="AezaKmi";
-//let DEV_TOUCH="iotain_0",DEV_I2C="iotain_0",DEV_HID="iotain_0";
-let DEV_TOUCH="iotain_0",DEV_I2C="iotain_2",DEV_HID="iotain_4";
+let DEV_TOUCH="iotain_0",DEV_I2C="iotain_0",DEV_HID="iotain_0",DEV_LED="iotain_0";
+//let DEV_TOUCH="iotain_0",DEV_I2C="iotain_2",DEV_HID="iotain_4",DEV_LED="iotain_4";
 
 let DEVICE_NAME=Cfg.get("device.idd");  
 let DEVICE_NO=DEVICE_NAME.slice(7, 8); 
 if(DEVICE_NAME==="iotain_0")
 {
-  DEVICE_NO="4";
+  DEVICE_NO="0";
   DEVICE_NAME="iotain_"+DEVICE_NO;
   Cfg.set({device:{idd:DEVICE_NAME}});
 }   
+Cfg.set({device:{id:DEVICE_NAME}});
 let led =5; 
 let led2=4;
 let isEsp=DEVICE_NAME==="iotain_0" || DEVICE_NAME==="iotain_2" || DEVICE_NAME==="iotain_4";
@@ -87,23 +88,30 @@ let bt_setup=ffi('int bt_setup(bool)');
 
 let  encrypt =function(data,key)
 {
+   
   let i=0;
   let ik=0;
   let len_d=data.length;
   let len_k=key.length; 
-  let enc= ""; 
+  let enc= []; 
     for(i=0;i<len_d;i++ )
     {
         if(ik>=len_k) ik=0;
-        enc=enc+(chr(data.at(i) + key.at(ik) ))
+        enc.push(((data.at(i) + key.at(ik) )));
         ik++;
     } 
+
+    //print(DEVICE_NAME,'Encrypted-->',enc);
+
+
+
     return enc;
     
 };
  
 let decrypt =function(enc,key)
 {
+   
   let i=0;
   let ik=0;
   let len_d=enc.length;
@@ -112,9 +120,15 @@ let decrypt =function(enc,key)
     for(i=0;i<len_d;i++ )
     {
         if(ik>=len_k) ik=0;
-        dec=dec+(chr(enc.at(i) - key.at(ik) ))
+        dec=dec+(chr(enc[i] - key.at(ik) ))
         ik++;
     } 
+
+
+    //print(DEVICE_NAME,'Decrypted-->',dec);
+
+
+
     return dec; 
 };
   
@@ -149,7 +163,8 @@ let myHostIp="192.168."+DEVICE_NO+".1";
 let timer_count=0;
 let http_call=function(url,body)
 {
-   print(DEVICE_NAME,"HTTP CALL ",url,JSON.stringify(body));
+   print(DEVICE_NAME,"HTTP CALL ",url);
+   //print(DEVICE_NAME,"HTTP CALL ",url,JSON.stringify(body));
 
    HTTP.query({
     url: url,
@@ -180,7 +195,7 @@ let perform_job=function(job)
 {
 
   let res={message:"Job completed on "+DEVICE_NAME,val:10};
-    if(job.res_id===2017 && DEVICE_NAME===DEV_I2C)
+    if(job.res_id===2017 && DEVICE_NAME===DEV_LED)
     { 
         let status="on";
         if(job.action==="turn_on")
@@ -194,13 +209,16 @@ let perform_job=function(job)
         }
         res={message:"LED Status Changed ! Job completed on "+DEVICE_NAME,led:status};
     }
-    else if(job.res_id==="2016" && DEVICE_NAME===DEV_I2C)
+    else if(job.res_id===2016 && DEVICE_NAME===DEV_I2C)
     {
 
 
       let payload=decrypt(job.payload,KEY);
       let params=JSON.parse(payload);
-      printRow(params.txt,params.line);
+      printRow(params.text,params.line);
+     // printRow("Performing Job",3);
+
+      res={message:"Data Displayed on LCD @ "+DEVICE_NAME};
 
 
     }
@@ -208,6 +226,7 @@ let perform_job=function(job)
 
     on_delay(led2,4000);
     print(DEVICE_NAME,"Performing ",job.res_name);
+    gc(true);
     return res;
     
 };
@@ -244,7 +263,7 @@ let fwd_request=function(req)
         status:req.status,
         job:req.job
     }; 
-    print(DEVICE_NAME,"FWD RQ FROM:",req.src_ip," JOB:",req.job.res_name," TO:", JSON.stringify(clients)," And ",myHostIp); 
+   /* print(DEVICE_NAME,"FWD RQ FROM:",req.src_ip," JOB:",req.job.res_name," TO:", JSON.stringify(clients)," And ",myHostIp); */
     for(let i=0;i<clients.length;i++)
     { 
         http_call("http://"+clients[i].ip+"/rpc/on_request",_req);
@@ -267,19 +286,23 @@ lcd.init();
 lcd.backlight();
 lcd.setCursor(0, 0);
 lcd.clear();  
-lcd.print("! Sab Moh Maya Hai !");
+lcd.print("!      Iotain      !");
 
 let printRow=function(op,row)
 {
-  
+   if(DEVICE_NAME!==DEV_I2C) return;
     lcd.setCursor(0, row);
     lcd.print("                    "); 
     lcd.setCursor(0, row); 
+    print(DEVICE_NAME,":LCD: ",op);
     lcd.print(op);
+   // lcd.autoscroll();
 
 };
- 
+
+printRow("Connecting wifi...",3);
 /****TOUCH PAD */
+let nonT=[0,0,0];
 load('api_esp32_touchpad.js'); 
 let counter=0;
 let on_touch=function(st)
@@ -287,70 +310,49 @@ let on_touch=function(st)
 
   counter++; 
    
-  let msg="Touch Count is "+counter;
-  
+  let msg="Touch On-"+JSON.stringify(st)+"  Count-"+JSON.stringify(counter);
+  //print(DEVICE_NAME,msg);
   let req={
     req_id:JSON.stringify(Timer.now()),
     src_ip:"0.0.0.0",
     status:{"message":"under process"},
-    job:{"res_id":2015,"res_name":"LCD Display",payload:encrypt(JSON.stringify({
+    job:{"res_id":2016,"res_name":"LCD Display",payload:encrypt(JSON.stringify({
 
       text:msg,
-      line:2
+      line:1
 
     }),KEY)}
   };
-   
   RPC.call(RPC.LOCAL, 'on_request', req, function (resp, ud) {
     print('Response:', JSON.stringify(resp));
   }, null);
 
-};
+ 
+}; 
+  
 TouchPad.init();
-TouchPad.filterStart(10);
-TouchPad.setMeasTime(0x1000, 0xffff);
-TouchPad.setVoltage(TouchPad.HVOLT_2V4, TouchPad.LVOLT_0V8, TouchPad.HVOLT_ATTEN_1V5);
+TouchPad.setVoltage(TouchPad.HVOLT_2V4, TouchPad.LVOLT_0V8, TouchPad.HVOLT_ATTEN_1V5); 
 
-let nonT=[0,0,0];
- 
- 
+let ts0 = TouchPad.GPIO[13]; TouchPad.config(ts0, 0); 
+nonT[0]= TouchPad.read(ts0) ;  
 
-let ts0 = TouchPad.GPIO[4]; TouchPad.config(ts0, 0);
-Sys.usleep(100000);   
-nonT[0]= TouchPad.readFiltered(ts0) * 2 / 3; 
-TouchPad.setThresh(ts0, nonT[0] );
+let ts1 = TouchPad.GPIO[12]; TouchPad.config(ts1, 0);
+nonT[1]= TouchPad.read(ts1) ; 
 
-
-let ts1 = TouchPad.GPIO[27]; TouchPad.config(ts1, 0);
-Sys.usleep(100000);   
-nonT[1]= TouchPad.readFiltered(ts1) * 2 / 3; 
-TouchPad.setThresh(ts1, nonT[1]);
-
-
-let ts2 = TouchPad.GPIO[13]; TouchPad.config(ts2, 0);
-Sys.usleep(100000);   
-nonT[2]= TouchPad.readFiltered(ts2)* 2 / 3; 
-TouchPad.setThresh(ts2, nonT[2] );
-
-
-TouchPad.isrRegister(function(st) {
-
-   
-    on_touch(st);
-
-}, null);
-
+let ts2 = TouchPad.GPIO[14]; TouchPad.config(ts2, 0);
+nonT[2]=TouchPad.read(ts2) ;  
+  
 
 /***---HID---- */
- 
+GPIO.set_mode(18,GPIO.MODE_INPUT);
 let on_human=function(isIn)
 {
   print(DEVICE_NAME,"Contains Human ",isIn);
 
-  let msg="User is in the vicinity ";
+  let msg="HID-User Present";
   if(!isIn)
   {
-    msg="User left the vicinity ";
+    msg="HID-User left";
   }
   let req={
     req_id:JSON.stringify(Timer.now()),
@@ -363,7 +365,13 @@ let on_human=function(isIn)
 
     }),KEY)}
   };
-   
+
+  if(GPIO.read(18)===1)
+  { 
+    print(DEVICE_NAME,"GPIO18 is HIGH , Inhibiting HID");
+    return;
+  }//print(JSON.stringify(req));
+  
   RPC.call(RPC.LOCAL, 'on_request', req, function (resp, ud) {
     print('Response:', JSON.stringify(resp));
   }, null);
@@ -374,7 +382,7 @@ load('api_bt_gap.js');
 let lastBtScan=[];
 let currentScan=[];
 let scanBtTimer=-1;
-let BT_SCAN_INTERVAL=2000;
+let BT_SCAN_INTERVAL=10000;
 let lastBtHumanState="";
 let HID_STATE_IN="HUMAN_IN";
 let HID_STATE_OUT="HUMAN_OUT";
@@ -423,13 +431,43 @@ let bt_detector=function(action)
 
 };
 
-
+/*********DEV Res Config** */
 if(DEVICE_NAME===DEV_TOUCH)
 {
-    TouchPad.intrEnable();
+    
+  Timer.set(1000 /* 1 sec */, Timer.REPEAT, function() {
+    let vals=[TouchPad.read(ts0),TouchPad.read(ts1),TouchPad.read(ts2)]; 
+    //print('Thresh Vals ',JSON.stringify(nonT));
+    //print('Sensor Vals ',JSON.stringify(vals));
+    let i=0; 
+    if(vals[i] < nonT[i]/2)
+    {
+      on_touch(i);
+    }
+    i=1; 
+    if(vals[i] < nonT[i]/2)
+    {
+      on_touch(i);
+    }
+    i=2; 
+    if(vals[i] < nonT[i]/2)
+    {
+      on_touch(i);
+    }
+
+    if(GPIO.read(18)===1)
+    { 
+      print(DEVICE_NAME,"GPIO18 is HIGH , Resetting Thresholds");
+      nonT[0]= TouchPad.read(ts0) ; 
+      nonT[1]= TouchPad.read(ts1) ; 
+      nonT[2]= TouchPad.read(ts2) ; 
+    }
+  
+
+  }, null);
     resources.push({"res_name":"Touchpad","res_id":2015});
 }
-else if(DEVICE_NAME===DEV_I2C)
+if(DEVICE_NAME===DEV_I2C)
 {
 
   Cfg.set({i2c:{
@@ -444,7 +482,7 @@ else if(DEVICE_NAME===DEV_I2C)
 
   
 }
-else if(DEVICE_NAME===DEV_HID)
+if(DEVICE_NAME===DEV_HID)
 {
   Cfg.set({bt:{enable:true,keep_enabled:true,adv_enable:true}});
   
@@ -459,7 +497,7 @@ else if(DEVICE_NAME===DEV_HID)
 
  
 
-/**********************/
+/***********RPC***********/
 RPC.addHandler('changeDeviceName',function(args){
 
   if(args.new_name!==undefined)
@@ -519,6 +557,7 @@ RPC.addHandler('on_callback',function(req){
 GPIO.write(led2,0);
 RPC.addHandler('on_request',function(req){
  
+  print(JSON.stringify(req));
   print(DEVICE_NAME,"request on "+DEVICE_NAME, " ID ",req.req_id);gc(true); 
   let res=find_resource(req.job.res_id);
   if(res===undefined)
@@ -621,12 +660,15 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
       wifi_setup(); 
     } 
   } else if (ev === Net.STATUS_CONNECTING) {
+    printRow("Wifi Connecting !",3);
     evs = 'CONNECTING';
   } else if (ev === Net.STATUS_CONNECTED) { 
     GPIO.write(led,1); 
     evs = 'CONNECTED';
   } else if (ev === Net.STATUS_GOT_IP) {
     evs = 'GOT_IP';
+    printRow("Wifi Connected !",3);
+
     diconnect_count=0;
     stop_blink();
     GPIO.write(led,1); 
