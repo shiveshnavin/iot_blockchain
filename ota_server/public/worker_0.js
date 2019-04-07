@@ -56,7 +56,7 @@ let wifi_setup=ffi('void change_wifi()');
 let iotains=["iotain_0","iotain_1","iotain_2","iotain_3","iotain_4"];
 if(s.status==="TO_COMMIT")
 {
-  print(DEVICE_NAME,"Updating Device Config");
+  //print(DEVICE_NAME,"Updating Device Config");
   Cfg.set({wifi:{ap:AP}});
   Cfg.set({device:{idd:DEVICE_NAME}}); 
   if(iotains[0]===DEVICE_NAME)
@@ -214,6 +214,7 @@ let perform_job=function(job)
 
 
       let payload=decrypt(job.payload,KEY);
+      print("Decrypted Payload --> ",payload);
       let params=JSON.parse(payload);
       printRow(params.text,params.line);
      // printRow("Performing Job",3);
@@ -324,7 +325,7 @@ let on_touch=function(st)
     }),KEY)}
   };
   RPC.call(RPC.LOCAL, 'on_request', req, function (resp, ud) {
-    print('Response:', JSON.stringify(resp));
+    print('on_touch Response:', JSON.stringify(resp));
   }, null);
 
  
@@ -373,7 +374,7 @@ let on_human=function(isIn)
   }//print(JSON.stringify(req));
   
   RPC.call(RPC.LOCAL, 'on_request', req, function (resp, ud) {
-    print('Response:', JSON.stringify(resp));
+    print('on_human Response:', JSON.stringify(resp));
   }, null);
 
 };
@@ -455,14 +456,14 @@ if(DEVICE_NAME===DEV_TOUCH)
       on_touch(i);
     }
 
-    if(GPIO.read(18)===1)
-    { 
-      print(DEVICE_NAME,"GPIO18 is HIGH , Resetting Thresholds");
-      nonT[0]= TouchPad.read(ts0) ; 
-      nonT[1]= TouchPad.read(ts1) ; 
-      nonT[2]= TouchPad.read(ts2) ; 
-    }
-  
+  if(GPIO.read(18)===1)
+  { 
+    print(DEVICE_NAME,"GPIO18 is HIGH , Resetting Thresholds");
+    nonT[0]= TouchPad.read(ts0) ; 
+    nonT[1]= TouchPad.read(ts1) ; 
+    nonT[2]= TouchPad.read(ts2) ; 
+  }
+
 
   }, null);
     resources.push({"res_name":"Touchpad","res_id":2015});
@@ -557,8 +558,8 @@ RPC.addHandler('on_callback',function(req){
 GPIO.write(led2,0);
 RPC.addHandler('on_request',function(req){
  
-  print(JSON.stringify(req));
   print(DEVICE_NAME,"request on "+DEVICE_NAME, " ID ",req.req_id);gc(true); 
+  print("Encrypted Payload --> ",JSON.stringify(req.job.payload));
   let res=find_resource(req.job.res_id);
   if(res===undefined)
   {
