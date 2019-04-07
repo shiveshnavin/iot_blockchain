@@ -19,7 +19,7 @@ if(DEVICE_NAME==="iotain_0")
 let led =5; 
 let led2=4;
 let isEsp=DEVICE_NAME==="iotain_0" || DEVICE_NAME==="iotain_2" || DEVICE_NAME==="iotain_4";
-if(isEsp)
+if(!isEsp)
 {
   led=2; 
 }

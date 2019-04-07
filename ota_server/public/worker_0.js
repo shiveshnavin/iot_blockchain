@@ -8,14 +8,14 @@ load('api_file.js');
 load('api_gpio.js');  
 
 let KEY="AezaKmi";
-let DEV_TOUCH="iotain_0",DEV_I2C="iotain_0",DEV_HID="iotain_0",DEV_LED="iotain_0";
-//let DEV_TOUCH="iotain_0",DEV_I2C="iotain_2",DEV_HID="iotain_4",DEV_LED="iotain_4";
+//let DEV_TOUCH="iotain_0",DEV_I2C="iotain_0",DEV_HID="iotain_0",DEV_LED="iotain_0";
+let DEV_TOUCH="iotain_0",DEV_I2C="iotain_2",DEV_HID="iotain_4",DEV_LED="iotain_4";
 
 let DEVICE_NAME=Cfg.get("device.idd");  
 let DEVICE_NO=DEVICE_NAME.slice(7, 8); 
 if(DEVICE_NAME==="iotain_0")
 {
-  DEVICE_NO="0";
+  DEVICE_NO="2";
   DEVICE_NAME="iotain_"+DEVICE_NO;
   Cfg.set({device:{idd:DEVICE_NAME}});
 }   
@@ -149,7 +149,7 @@ let register=function(host,sta_ip)
 };
 let get_info=function()
 {
-  Cfg.set({bt:{enable:true}});
+  //Cfg.set({bt:{enable:true}});
   RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function (resp, ud) { 
     status.sta_ip = resp.wifi.sta_ip; 
     status.sta_ssid="iotain_"+status.sta_ip.slice(8, 9) ; 
@@ -661,7 +661,7 @@ Event.addGroupHandler(Net.EVENT_GRP, function(ev, evdata, arg) {
       wifi_setup(); 
     } 
   } else if (ev === Net.STATUS_CONNECTING) {
-    printRow("Wifi Connecting !",3);
+    printRow("Connecting wifi...",3);
     evs = 'CONNECTING';
   } else if (ev === Net.STATUS_CONNECTED) { 
     GPIO.write(led,1); 
