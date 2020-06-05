@@ -136,8 +136,8 @@ All devices connect to backbone network when in centralized mode
 ### Interconnect 
 When backbone network goes down or when in chained mode , trigger a scan and connect to the IoT wifi SSID with largest signal 
 
-[[screenshots/topo1.png | width=100px | height=100px |  alt=Topology]]
-[[screenshots/topo1.png | width=100px | height=100px | alt=Topology]] 
+![[screenshots/topo1.png | width=100px | height=100px |  alt=Topology]]
+![[screenshots/topo1.png | width=100px | height=100px | alt=Topology]] 
 
 
 ## Overview of Project
