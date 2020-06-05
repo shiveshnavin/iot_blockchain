@@ -112,7 +112,6 @@ Detects a particular person when in vicinity .
 To make HTTP calls from once device routed through AP and that Routed through STA mode when device is working in AP+STA mode . This will be used for Chaining Up multiple devices , request forwarding and Callbacking [See Test 2]
 
 
-
 ### Implement Intercom functions (CORE)
 Write RPC listeners to listen to requests , check whether resource in avalable , if available  pass the request to resource access controller else pass the request to other devices .
 
@@ -138,6 +137,9 @@ All devices connect to backbone network when in centralized mode
 When backbone network goes down or when in chained mode , trigger a scan and connect to the IoT wifi SSID with largest signal 
 
  
+![Alt text](screenshots/topo1.png "Iot Chain") 
+![Alt text](screenshots/topo2.png "Iot Chain") 
+
 
 ## Overview of Project
 ![Alt text](screenshots/plan0.jpg "Main Screen")
