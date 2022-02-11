@@ -24,7 +24,7 @@
     "array": "^0.4.3",
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
-    "express-handlebars": "^3.0.0",
+    "express-handlebars": "^5.3.1",
     "file": "^0.2.2",
     "formidable": "^1.2.1",
     "path": "^0.12.7",
