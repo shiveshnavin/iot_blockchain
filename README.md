@@ -1,5 +1,5 @@
 # IoTain
-College Minor & Major project on Implementation of IoT using Blockchain
+College Minor & Major project on Implementation of Blockchain using IoT for fault-tolerant decentralized communication.
 
 ![Alt text](screenshots/mesh.gif "Iot Chain") 
 
